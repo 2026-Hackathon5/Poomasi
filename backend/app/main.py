@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.routers import health, me, missions
+from app.routers import countries, health, me, missions
 
 # Swagger에서 명세서 구분 순서대로 보이게 한다
 TAGS = [
@@ -14,6 +14,7 @@ TAGS = [
     {"name": "F. 미션 인증"},
     {"name": "H. 미션 지도"},
     {"name": "I. 내 프로필"},
+    {"name": "공통"},
     {"name": "health"},
 ]
 
@@ -55,3 +56,4 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 app.include_router(health.router)
 app.include_router(me.router)
 app.include_router(missions.router)
+app.include_router(countries.router)

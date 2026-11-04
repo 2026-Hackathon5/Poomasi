@@ -52,8 +52,8 @@ seed/                # 시드 미션 (H.3)
 - 가입 직후 프론트가 `POST /api/me`로 프로필(닉네임, 사용자 유형, 국적)을 만든다. 프로필이 없으면 다른 API는 404 "프로필을 먼저 만들어주세요".
 
 ## DB 테이블
-- `profiles` — id(uuid, Supabase auth 사용자 ID), email, nickname(unique, 한글·영문·숫자 1~20자), user_type(`korean` / `foreign_resident`), nationality, xp(int, 기본 0), created_at
-- `missions` — id, title, description, country(필수), category(필수), verify_type(`location` / `photo` / `none`), source(`ai` / `user`), place_name, address, lat, lng, radius_m(기본 300), creator_id(null이면 팀 시드), created_at, deleted_at
+- `profiles` — id(uuid, Supabase auth 사용자 ID), email, nickname(unique, 한글·영문·숫자 1~20자), user_type(`korean` / `foreign_resident`), nationality(국적 코드, 4개 + `OTHER`), xp(int, 기본 0), created_at
+- `missions` — id, title, description, country(필수, 나라 코드), category(필수), verify_type(`location` / `photo` / `none`), source(`ai` / `user`), place_name, address, lat, lng, radius_m(기본 300), creator_id(null이면 팀 시드), created_at, deleted_at
   - `deleted_at`이 있으면 뽑기·목록·지도에서 숨긴다. 이미 수락한 사람의 내 미션 목록에는 그대로 보인다 (E.5)
 - `user_missions` — id, user_id, mission_id, status(`in_progress` / `reviewing` / `completed` / `cancelled`), accepted_at, completed_at, xp_awarded, photo_url, review(300자), deleted_at
   - 같은 사용자가 같은 미션을 `in_progress`·`reviewing`으로 두 번 가질 수 없다 (부분 unique index)
@@ -131,9 +131,14 @@ seed/                # 시드 미션 (H.3)
 - `PATCH /api/posts/{id}` 수정, 작성자만 (D.3.3)
 - `POST /api/posts/{id}/comments` 댓글 (D.3.4)
 
+## 나라
+- 미션 나라는 **대한민국 `KR`, 일본 `JP`, 중국 `CN`, 미국 `US`** 4개뿐이다. 국적은 이 4개 + 기타 `OTHER`. 목록은 `app/schemas/country.py` 한 곳에서 관리한다.
+- DB(`missions.country`, `profiles.nationality`)와 API 요청·응답에는 **코드만** 쓴다. 화면 이름(한국어·영어)은 프론트가 `GET /api/countries`(국적 선택은 `?include_other=true`)를 보고 바꾼다.
+- 목록에 없는 값은 422로 거절한다 (`POST /api/me` 국적은 OTHER 허용, 미션 목록·뽑기·만들기의 `country`는 4개만).
+
 ## 시드 데이터 (H.3, E.2 "기본은 AI가 선정")
 - 팀이 AI로 미션을 미리 만들어 시드로 넣는다 (`source=ai`). 뽑기는 DB에서 무작위로 고른다. 실시간 AI 생성은 하지 않는다.
-- 장소 미션 10~20개. 서울 밖 지역을 포함하고, 나라를 4~5개국 이상 고르게 섞는다.
+- 장소 미션 10~20개. 서울 밖 지역을 포함하고, 나라 4개(KR, JP, CN, US)를 고르게 섞는다.
   - 예: 전통시장, 고궁, 안산 다문화거리, 이태원, 외국 음식점
 - 위치 없는 미션(사진·없음)도 나라별로 몇 개씩 넣는다. 랜덤 뽑기 시연에 쓴다.
 - 장소 미션은 주소만 적고, 시드 스크립트가 카카오 API로 좌표를 채운다.
