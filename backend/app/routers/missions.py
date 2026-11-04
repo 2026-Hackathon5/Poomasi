@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_profile
@@ -7,7 +8,10 @@ from app.db import get_db
 from app.models import ACTIVE_STATUSES, Mission, Profile, UserMission
 from app.schemas.country import CountryCode
 from app.schemas.mission import MissionOut, VerifyType
+from app.schemas.user_mission import UserMissionOut
 from app.services.missions import my_statuses, visible_missions
+
+ALREADY_IN_PROGRESS = "이미 진행 중인 미션이에요"
 
 router = APIRouter(prefix="/api/missions", tags=["E. 랜덤미션"])
 
@@ -73,3 +77,41 @@ def draw_mission(
         raise HTTPException(404, detail="뽑을 수 있는 미션이 없어요")
     # 후보에서 내가 하는 미션을 이미 뺐으니 my_status는 항상 null
     return MissionOut.from_mission(mission)
+
+
+@router.post(
+    "/{mission_id}/accept",
+    summary="E.2 · E.4 미션 수락 → I.2 진행 중 미션에 추가",
+    response_model=UserMissionOut,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        404: {"description": "없거나 숨긴 미션"},
+        409: {"description": "이미 진행 중이거나 완료한 미션"},
+    },
+)
+def accept_mission(
+    mission_id: int,
+    profile: Profile = Depends(get_current_profile),
+    db: Session = Depends(get_db),
+) -> UserMissionOut:
+    """취소했던 미션은 다시 수락할 수 있다. 응답의 id(내 미션 id)로 인증·취소 API를 부른다."""
+    mission = db.scalar(visible_missions().where(Mission.id == mission_id))
+    if mission is None:
+        raise HTTPException(404, detail="미션을 찾을 수 없어요")
+
+    current = my_statuses(db, profile.id, [mission_id]).get(mission_id)
+    if current in ACTIVE_STATUSES:
+        raise HTTPException(409, detail=ALREADY_IN_PROGRESS)
+    if current == "completed":
+        raise HTTPException(409, detail="이미 완료한 미션이에요")
+
+    user_mission = UserMission(user_id=profile.id, mission_id=mission_id, status="in_progress")
+    db.add(user_mission)
+    try:
+        db.commit()
+    except IntegrityError:
+        # 버튼을 빠르게 두 번 눌러 요청이 동시에 온 경우: DB의 부분 unique index가 두 번째를 막는다
+        db.rollback()
+        raise HTTPException(409, detail=ALREADY_IN_PROGRESS)
+    db.refresh(user_mission)
+    return UserMissionOut.from_user_mission(user_mission)
