@@ -6,6 +6,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from app.models import Profile
+from app.schemas.country import NATIONALITY_CODES
 from app.schemas.level import LevelOut
 
 NICKNAME_RE = re.compile(r"^[가-힣a-zA-Z0-9]{1,20}$")
@@ -18,7 +19,10 @@ class ProfileCreate(BaseModel):
 
     nickname: str = Field(description="한글·영문·숫자 1~20자", examples=["푸마시"])
     user_type: UserType = Field(description="korean: 한국인 / foreign_resident: 한국 거주 외국인")
-    nationality: str = Field(examples=["대한민국"])
+    nationality: str = Field(
+        description="국적 코드: KR / JP / CN / US / OTHER(기타) (GET /api/countries?include_other=true)",
+        examples=["KR"],
+    )
 
     @field_validator("nickname")
     @classmethod
@@ -33,11 +37,11 @@ class ProfileCreate(BaseModel):
     @field_validator("nationality")
     @classmethod
     def check_nationality(cls, v: str) -> str:
-        v = v.strip()
+        v = v.strip().upper()
         if not v:
             raise ValueError("사용자 정보를 입력해주세요")
-        if len(v) > 50:
-            raise ValueError("국적은 50자 이하로 입력해주세요")
+        if v not in NATIONALITY_CODES:
+            raise ValueError("국적을 목록에서 선택해주세요")
         return v
 
 

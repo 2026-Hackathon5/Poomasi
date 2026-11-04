@@ -19,7 +19,7 @@ class MissionOut(BaseModel):
     id: int
     title: str = Field(examples=["경복궁에서 한복 사진 찍기"])
     description: str
-    country: str = Field(examples=["대한민국"])
+    country: str = Field(description="나라 코드 KR / JP / CN / US", examples=["KR"])
     category: str = Field(examples=["전통문화"])
     verify_type: VerifyType = Field(description="location: 위치 / photo: 사진 / none: 인증 없음")
     xp: int = Field(description="획득 경험치 (위치 30, 사진 20, 없음 10)", examples=[30])
