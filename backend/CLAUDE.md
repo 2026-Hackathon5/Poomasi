@@ -138,21 +138,27 @@ seed/                # 시드 미션 (H.3)
 - 위치 없는 미션(사진·없음)도 나라별로 몇 개씩 넣는다. 랜덤 뽑기 시연에 쓴다.
 - 장소 미션은 주소만 적고, 시드 스크립트가 카카오 API로 좌표를 채운다.
 
-## 백엔드 분담 (3.5 : 1.5)
+## 백엔드 분담 (3 : 2)
 같은 파일을 동시에 고치지 않도록 파일 단위로 나눈다. 모델(`app/models/`)을 바꿔야 하면 상대에게 먼저 말하고 Alembic 마이그레이션을 새로 만든다.
+A가 일정보다 빠르면 B의 아직 시작 안 한 이슈를 가져가 돕는다 (먼저 말하고 이슈 Assignees 변경).
+브랜치: `main` ← `dev` ← `be` ← `<종류>/#<이슈번호>/<기능>` (예: `feat/#1/mission-list`, `fix/#8/mission-xp`, `chore/#9/render-deploy`). 기능 브랜치는 `be`에서 만들고 PR도 `be`로 보낸다. 셸 명령에서는 브랜치 이름을 따옴표로 감싼다 (`git push -u origin "feat/#1/mission-list"`).
 
-- **백엔드 A (3.5)** — 기반 + 미션 핵심 흐름
+- **백엔드 A (3)** — 미션을 뽑고 → 수락하고 → 인증해서 → 완료하는 핵심 흐름
   - 기반: config, db, auth, models, alembic, main, `services/level.py`, `routers/me.py` (완료)
-  - `routers/home.py` (B.1)
-  - `routers/missions.py` (E.2 뽑기, E.4 목록·수락)
+  - `routers/missions.py` + `schemas/mission.py` + `services/missions.py` (E.4 목록 완료, E.2 뽑기, 수락)
   - `routers/attempts.py` + `services/verify.py` (I.2 진행 중·취소, F.1·F.3·F.4 인증, I.3 완료·후기·삭제)
-  - `services/storage.py`, `services/ai_photo.py` + 사진 인증 (F.2)
+  - 사진 인증 API (F.2) — B의 storage·ai_photo 부품을 연결
   - Render 배포
-- **백엔드 B (1.5)** — 서로 의존이 적은 기능
+- **백엔드 B (2)** — 메인·게시판·미션 만들기·지도, A가 쓸 부품
+  - `services/geocode.py` + `seed/` (H.3 시드 미션, 카카오 좌표 변환) — 가장 먼저
   - `routers/posts.py` (D 숨은 뜻 게시판·댓글 전체)
-  - `services/geocode.py` + `seed/` (H.3 시드 미션, 카카오 좌표 변환)
+  - `routers/home.py` (B.1 메인, I.4 통계)
+  - `services/storage.py`, `services/ai_photo.py` (F.2 부품, 목요일 저녁까지)
+    - `upload_photo(user_id, user_mission_id, data, content_type) -> str` (공개 주소)
+    - `judge(image, mission_title, mission_description) -> bool`, 실패 시 `AIUnavailable` 예외 (A가 reviewing 처리). AI 확정 전에는 항상 True
   - `routers/created_missions.py` (E.3 미션 만들기, E.5 내가 만든 미션·삭제) — geocode 재사용
   - `routers/map.py` (H.1 깃발)
+- 미션 응답은 `schemas/mission.py`의 `MissionOut.from_mission(m, my_status)`, 숨긴 미션 제외는 `services/missions.py`의 `visible_missions()`, 내 진행 상태는 `my_statuses()`를 재사용한다.
 
 ## 하지 않는 것 (해커톤 범위 밖)
 - 실시간 알림, 채팅, 신고·차단, 관리자 페이지
