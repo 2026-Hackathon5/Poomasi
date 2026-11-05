@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.routers import attempts, countries, health, me, missions, posts
+from app.routers import attempts, countries, created_missions, health, me, missions, posts
 
 # Swagger에서 명세서 구분 순서대로 보이게 한다
 TAGS = [
@@ -59,3 +59,4 @@ app.include_router(missions.router)
 app.include_router(attempts.router)
 app.include_router(countries.router)
 app.include_router(posts.router)
+app.include_router(created_missions.router)
