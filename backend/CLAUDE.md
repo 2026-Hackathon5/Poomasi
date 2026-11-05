@@ -8,7 +8,7 @@
 - Python 3.11+, FastAPI, SQLAlchemy 2.x, Alembic, Pydantic v2, psycopg 3
 - DB·로그인·사진 저장: Supabase (PostgreSQL, Auth, Storage)
   - DB는 SQLAlchemy로 직접 연결, Storage는 httpx로 REST 호출 (supabase-py 안 씀)
-- 외부 API: 카카오 로컬 API(주소 → 좌표), AI 이미지 판정 API(팀 확정 전 — 인터페이스만 만들어 둠)
+- 외부 API: 카카오 로컬 API(주소 → 좌표), Google Gemini(사진 판정, 기본 `gemini-3.1-flash-lite`, 바쁘면 다른 모델로 자동 재시도, Interactions API를 httpx로 호출)
 - 배포: Render 무료(백엔드), Vercel(프론트, React + TypeScript)
 - API 문서: Swagger `/docs` (오른쪽 위 Authorize에 Supabase access token을 넣으면 로그인 API도 테스트 가능)
 
@@ -27,7 +27,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - `SUPABASE_SERVICE_ROLE_KEY` — Storage 업로드용 비밀 키, 서버에서만 사용. API Keys의 **secret key**(`sb_secret_...`) 또는 Legacy 탭의 `service_role`(`eyJ...`). `sb_publishable_...`(공개 키)는 안 됨. Storage 호출 시 `sb_secret_` 키는 `apikey` 헤더로만 보낸다 (JWT가 아니라서 `Authorization: Bearer`에 넣지 않음)
 - `SUPABASE_JWT_SECRET` — Legacy JWT secret(HS256)을 쓰는 프로젝트만 필요. 우리 프로젝트는 새 JWT Signing Keys(ES256)라서 `SUPABASE_URL`의 JWKS로 자동 검증 → 비워 둬도 됨
 - `KAKAO_REST_API_KEY` — 주소 → 좌표
-- `AI_API_KEY` — 사진 판정
+- `AI_API_KEY` — 사진 판정, Google AI Studio API 키. `AI_MODEL` — 기본 `gemini-3.1-flash-lite`
 - `CORS_ORIGINS` — 쉼표 구분 (로컬 `http://localhost:5173`, Vercel 주소)
 
 
@@ -73,10 +73,11 @@ seed/                # 시드 미션 (H.3)
 
 ### 인증 (F)
 - 위치(F.1): 요청 좌표와 미션 좌표의 거리를 haversine으로 계산해 `radius_m` 이내면 성공. 실패하면 거리를 함께 돌려준다.
-- 사진(F.2): image/* 파일이고 8MB 이하만 받는다. Supabase Storage `mission-photos` 버킷에 `{user_id}/{user_mission_id}.jpg`로 저장하고 AI로 판정한다.
+- 사진(F.2): image/* 파일이고 8MB 이하만 받는다. Supabase Storage `mission-photos` 버킷에 `{user_id}/{user_mission_id}.{확장자}`로 저장한다. AI가 먼저 판정하고 통과한 사진만 저장한다.
   - 버킷은 만들어 둠: 공개(public), 8MB, `image/*`만 허용. `photo_url`에는 공개 주소 `{SUPABASE_URL}/storage/v1/object/public/mission-photos/{경로}`를 저장한다.
-  - 관련 없다고 판정하면 실패로 처리한다 (다시 찍기 안내).
-  - AI 호출이 실패하면 `reviewing`으로 저장하고, `POST .../verify/photo/retry`로 다시 판정한다.
+  - AI(`services/ai_photo.py`)는 사진에 미션 내용이 보이는지만 본다. 사람 얼굴 유무는 기준이 아니다 (화면 안내만).
+  - 관련 없다고 판정하거나 AI 호출이 실패하면 200 + `success: false`, 진행 중 그대로 (실패 팝업의 '다시 시도하기'로 재촬영). `reviewing` 상태와 retry API는 쓰지 않는다.
+  - 프론트는 업로드 전에 긴 변 1280~1600px JPEG로 줄여서 보낸다.
 - 없음(F.3): 바로 성공.
 - 성공하면 status를 `completed`로, `completed_at`과 `xp_awarded`를 채우고, `profiles.xp`를 더한다. 이 처리는 `services/verify.py` 한 곳에서 한 트랜잭션으로 한다.
 
@@ -118,7 +119,6 @@ seed/                # 시드 미션 (H.3)
 ### 인증 (F)
 - `POST /api/me/missions/{id}/verify/location` body `{lat, lng}`
 - `POST /api/me/missions/{id}/verify/photo` multipart `photo`
-- `POST /api/me/missions/{id}/verify/photo/retry`
 - `POST /api/me/missions/{id}/verify/none`
 
 ### 지도 (H)

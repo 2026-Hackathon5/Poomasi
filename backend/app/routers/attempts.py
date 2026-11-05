@@ -3,10 +3,11 @@
 주소의 {user_mission_id}는 "내 미션 id"다 (수락 API 응답의 id). 미션 id가 아니다.
 """
 
+import logging
 from datetime import datetime, timezone
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -15,6 +16,8 @@ from app.db import get_db
 from app.models import ACTIVE_STATUSES, Profile, UserMission
 from app.schemas.user_mission import ReviewIn, UserMissionOut
 from app.schemas.verify import LocationIn, VerifyResultOut
+from app.services.ai_photo import AIUnavailable, judge
+from app.services.storage import StorageUnavailable, upload_photo
 from app.services.verify import check_verifiable, complete_mission, distance_m, format_distance
 
 VERIFY_TAG = "F. 미션 인증"
@@ -25,6 +28,9 @@ VERIFY_ERRORS = {
 }
 
 router = APIRouter(prefix="/api/me/missions")
+logger = logging.getLogger(__name__)
+
+PHOTO_MAX_BYTES = 8 * 1024 * 1024  # 버킷 제한과 같게
 
 
 def get_my_user_mission(db: Session, profile: Profile, user_mission_id: int) -> UserMission:
@@ -182,3 +188,55 @@ def verify_location(
     result = complete_mission(db, profile, um)
     result.distance_m = dist
     return result
+
+
+@router.post(
+    "/{user_mission_id}/verify/photo",
+    summary="F.2 사진 인증 (AI가 미션과 관련 있는 사진인지 판정)",
+    tags=[VERIFY_TAG],
+    response_model=VerifyResultOut,
+    responses={
+        **VERIFY_ERRORS,
+        413: {"description": "8MB 초과"},
+        503: {"description": "사진 저장 실패"},
+    },
+)
+def verify_photo(
+    user_mission_id: int,
+    photo: UploadFile = File(description="카메라로 찍은 사진 (image/*, 8MB 이하). 긴 변 1280~1600px JPEG로 줄여서 보내기를 추천"),
+    profile: Profile = Depends(get_current_profile),
+    db: Session = Depends(get_db),
+) -> VerifyResultOut:
+    """통과하면 사진을 저장하고 경험치 20. 관련 없는 사진이거나 AI가 응답하지 않으면 200 + success: false
+    (진행 중 그대로 → 프론트는 실패 팝업의 '다시 시도하기'로 다시 찍게 한다)."""
+    um = get_my_user_mission(db, profile, user_mission_id)
+    check_verifiable(um, "photo")
+
+    content_type = (photo.content_type or "").lower()
+    if not content_type.startswith("image/"):
+        raise HTTPException(400, detail="사진 파일만 올릴 수 있어요")
+    data = photo.file.read(PHOTO_MAX_BYTES + 1)
+    if not data:
+        raise HTTPException(400, detail="사진을 다시 찍어주세요")
+    if len(data) > PHOTO_MAX_BYTES:
+        raise HTTPException(413, detail="사진이 너무 커요. 8MB 이하로 올려주세요")
+
+    def fail(message: str) -> VerifyResultOut:
+        return VerifyResultOut(success=False, user_mission_id=um.id, status=um.status, message=message)
+
+    try:
+        ok, reason = judge(data, content_type, um.mission.title, um.mission.description)
+    except AIUnavailable as e:
+        logger.warning("사진 판정 실패 (user_mission %s): %s", um.id, e)
+        return fail("사진을 확인하지 못했어요. 잠시 후 다시 시도해주세요")
+    logger.info("사진 판정 (user_mission %s): %s, %s", um.id, ok, reason)
+    if not ok:
+        return fail("사진 인증에 실패했어요. 미션 대상이 잘 나오도록 다시 촬영해 주세요")
+
+    try:
+        photo_url = upload_photo(profile.id, um.id, data, content_type)
+    except StorageUnavailable as e:
+        logger.error("사진 저장 실패 (user_mission %s): %s", um.id, e)
+        raise HTTPException(503, detail="사진을 저장하지 못했어요. 잠시 후 다시 시도해주세요")
+
+    return complete_mission(db, profile, um, photo_url=photo_url)
