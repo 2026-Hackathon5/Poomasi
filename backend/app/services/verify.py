@@ -87,7 +87,7 @@ def complete_mission(
     leveled_up = after.level > before.level
     message = f"미션 완료! {xp} 경험치를 얻었어요"
     if leveled_up:
-        message += f" 🎉 Lv.{after.level} {after.title}(으)로 올랐어요"
+        message += f" 🎉 Lv.{after.level} {after.title}가 되었어요"
 
     db.refresh(um)
     db.refresh(profile)
