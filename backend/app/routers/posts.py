@@ -95,7 +95,7 @@ def create_post(
     db: Session = Depends(get_db),
 ) -> PostDetailOut:
     """등록한 글을 상세 모양으로 돌려준다 → 프론트는 상세 화면으로 이동."""
-    post = Post(author_id=profile.id, content=body.content)
+    post = Post(author_id=profile.id, title=body.title, content=body.content)
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -133,10 +133,11 @@ def update_post(
     profile: Profile = Depends(get_current_profile),
     db: Session = Depends(get_db),
 ) -> PostDetailOut:
-    """본문만 바꾼다. updated_at은 DB가 자동으로 지금 시간으로 바꾼다."""
+    """제목과 본문을 바꾼다. updated_at은 DB가 자동으로 지금 시간으로 바꾼다."""
     post = get_post_or_404(db, post_id)
     if post.author_id != profile.id:
         raise HTTPException(403, detail="내가 쓴 글만 수정할 수 있어요")
+    post.title = body.title
     post.content = body.content
     db.commit()
     db.refresh(post)
