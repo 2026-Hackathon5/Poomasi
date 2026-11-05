@@ -38,6 +38,8 @@ class UserMission(Base):
     xp_awarded: Mapped[int | None] = mapped_column(Integer)
     photo_url: Mapped[str | None] = mapped_column(String(500))
     review: Mapped[str | None] = mapped_column(String(300))
+    # I.3 후기 작성(마지막으로 고친) 날짜
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # I.3 완료 기록 삭제 (soft delete, xp는 유지)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

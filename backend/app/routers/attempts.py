@@ -1,8 +1,9 @@
-"""내 미션 (I.2 진행 중, I.3 완료) + 앞으로 추가할 인증 API (F)
+"""내 미션 (I.2 진행 중·취소, I.3 완료·후기·삭제) + 인증 API (F)
 
 주소의 {user_mission_id}는 "내 미션 id"다 (수락 API 응답의 id). 미션 id가 아니다.
 """
 
+from datetime import datetime, timezone
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -12,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.auth import get_current_profile
 from app.db import get_db
 from app.models import ACTIVE_STATUSES, Profile, UserMission
-from app.schemas.user_mission import UserMissionOut
+from app.schemas.user_mission import ReviewIn, UserMissionOut
 from app.schemas.verify import LocationIn, VerifyResultOut
 from app.services.verify import check_verifiable, complete_mission, distance_m, format_distance
 
@@ -84,6 +85,51 @@ def cancel_my_mission(
     db.commit()
     db.refresh(um)
     return UserMissionOut.from_user_mission(um)
+
+
+@router.patch(
+    "/{user_mission_id}/review",
+    summary="I.3 후기 작성·수정",
+    tags=["I. 내 프로필"],
+    response_model=UserMissionOut,
+    responses={404: {"description": "내 미션이 아님"}, 409: {"description": "완료한 미션이 아님"}},
+)
+def write_review(
+    user_mission_id: int,
+    body: ReviewIn,
+    profile: Profile = Depends(get_current_profile),
+    db: Session = Depends(get_db),
+) -> UserMissionOut:
+    """완료한 미션에만 쓸 수 있다. 다시 보내면 후기를 고치고 reviewed_at(작성 날짜)도 지금으로 바뀐다."""
+    um = get_my_user_mission(db, profile, user_mission_id)
+    if um.status != "completed":
+        raise HTTPException(409, detail="완료한 미션에만 후기를 쓸 수 있어요")
+    um.review = body.review
+    um.reviewed_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(um)
+    return UserMissionOut.from_user_mission(um)
+
+
+@router.delete(
+    "/{user_mission_id}",
+    summary="I.3 완료 기록 삭제",
+    tags=["I. 내 프로필"],
+    status_code=204,
+    responses={404: {"description": "내 미션이 아니거나 이미 삭제함"}, 409: {"description": "완료한 미션이 아님"}},
+)
+def delete_my_record(
+    user_mission_id: int,
+    profile: Profile = Depends(get_current_profile),
+    db: Session = Depends(get_db),
+) -> None:
+    """진짜로 지우지 않고 숨긴다 → 완료 목록·지도 깃발·나의 활동 숫자에서 빠진다.
+    이미 받은 경험치와 레벨은 그대로. 진행 중 미션은 취소 API를 쓴다."""
+    um = get_my_user_mission(db, profile, user_mission_id)
+    if um.status != "completed":
+        raise HTTPException(409, detail="완료한 미션만 삭제할 수 있어요")
+    um.deleted_at = datetime.now(timezone.utc)
+    db.commit()
 
 
 @router.post(
