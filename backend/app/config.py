@@ -10,7 +10,8 @@ class Settings(BaseSettings):
     supabase_service_role_key: str = ""
     supabase_jwt_secret: str = ""
     kakao_rest_api_key: str = ""
-    ai_api_key: str = ""
+    ai_api_key: str = ""  # Google AI Studio(Gemini) API 키
+    ai_model: str = "gemini-3.1-flash-lite"  # 바쁘면 ai_photo.py의 FALLBACK_MODELS로 넘어감
     cors_origins: str = "http://localhost:5173"
 
     @field_validator("database_url")
