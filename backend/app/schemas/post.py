@@ -6,6 +6,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 
 from app.models import Comment, Post, Profile
+from app.schemas.me import UserType
 
 POST_MAX = 1000
 COMMENT_MAX = 500
@@ -55,10 +56,11 @@ class AuthorOut(BaseModel):
     id: uuid.UUID
     nickname: str = Field(examples=["Minh"])
     nationality: str = Field(description="국적 코드 KR / JP / CN / US / OTHER", examples=["KR"])
+    user_type: UserType = Field(description="korean: 한국인 / foreign_resident: 한국에 거주하는 외국인")
 
     @classmethod
     def from_profile(cls, p: Profile) -> "AuthorOut":
-        return cls(id=p.id, nickname=p.nickname, nationality=p.nationality)
+        return cls(id=p.id, nickname=p.nickname, nationality=p.nationality, user_type=p.user_type)
 
 
 class CommentOut(BaseModel):
