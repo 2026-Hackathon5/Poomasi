@@ -1,4 +1,4 @@
-"""B.1 메인 화면 — 레벨, 추천 미션, 활동 통계를 한 번에"""
+"""B.1 메인 화면 — 닉네임, 레벨, 추천 미션, 나의 활동을 한 번에"""
 
 import uuid
 
@@ -30,25 +30,26 @@ def oldest_active_mission(db: Session, user_id: uuid.UUID) -> UserMission | None
     ).first()
 
 
+def _count(db: Session, model, *conditions) -> int:
+    """조건에 맞는 행 수"""
+    return db.scalar(select(func.count()).select_from(model).where(*conditions)) or 0
+
+
 def my_stats(db: Session, user_id: uuid.UUID) -> StatsOut:
-    """완료 미션 수(I.3 목록과 같게 삭제한 기록은 뺌), 내가 쓴 글 수, 내가 단 댓글 수."""
-    completed = db.scalar(
-        select(func.count())
-        .select_from(UserMission)
-        .where(
-            UserMission.user_id == user_id,
-            UserMission.status == "completed",
-            UserMission.deleted_at.is_(None),
-        )
+    """나의 활동. 미션 숫자는 I.2·I.3 목록과 같게 삭제한 기록은 뺀다."""
+    mine = (UserMission.user_id == user_id, UserMission.deleted_at.is_(None))
+    return StatsOut(
+        completed_missions=_count(db, UserMission, *mine, UserMission.status == "completed"),
+        in_progress=_count(db, UserMission, *mine, UserMission.status.in_(ACTIVE_STATUSES)),
+        reviews=_count(db, UserMission, *mine, UserMission.review.is_not(None)),
+        posts=_count(db, Post, Post.author_id == user_id),
+        comments=_count(db, Comment, Comment.author_id == user_id),
     )
-    posts = db.scalar(select(func.count()).select_from(Post).where(Post.author_id == user_id))
-    comments = db.scalar(select(func.count()).select_from(Comment).where(Comment.author_id == user_id))
-    return StatsOut(completed_missions=completed or 0, posts=posts or 0, comments=comments or 0)
 
 
 @router.get(
     "",
-    summary="B.1 메인 (레벨, 추천 미션, 통계) · I.4 프로필 통계",
+    summary="B.1 메인 (닉네임, 레벨, 추천 미션, 나의 활동) · I.4 프로필 나의 활동",
     response_model=HomeOut,
 )
 def get_home(
@@ -58,6 +59,7 @@ def get_home(
     """recommended가 null이면 프론트는 '미션 뽑으러 가기' 버튼을 보여준다. 다음 미션은 I.2 목록에서 본다."""
     active = oldest_active_mission(db, profile.id)
     return HomeOut(
+        nickname=profile.nickname,
         level=LevelOut.from_xp(profile.xp),
         recommended=UserMissionOut.from_user_mission(active) if active else None,
         stats=my_stats(db, profile.id),
