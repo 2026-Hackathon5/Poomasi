@@ -3,6 +3,13 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+class LocationIn(BaseModel):
+    """F.1 현재 위치 (인증할 때 한 번만 받고 저장하지 않는다)"""
+
+    lat: float = Field(ge=-90, le=90, description="위도", examples=[37.5790])
+    lng: float = Field(ge=-180, le=180, description="경도", examples=[126.9768])
+
+
 class VerifyResultOut(BaseModel):
     """F.1 · F.2 · F.3 인증 결과 (공통)
 

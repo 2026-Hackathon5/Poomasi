@@ -11,6 +11,7 @@
 DB는 같은 줄을 한 번에 한 요청만 바꾸게 해 주므로, 두 번째 요청은 바뀐 줄이 0개 → 409가 된다.
 """
 
+import math
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -22,6 +23,22 @@ from app.schemas.verify import VerifyResultOut
 from app.services.level import level_info, mission_xp
 
 ALREADY_COMPLETED = "이미 완료한 미션이에요"
+
+EARTH_RADIUS_M = 6_371_000
+
+
+def distance_m(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """두 좌표 사이의 거리(m). 지구를 공으로 보고 계산하는 haversine 공식."""
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp = p2 - p1
+    dl = math.radians(lng2 - lng1)
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * EARTH_RADIUS_M * math.asin(math.sqrt(a))
+
+
+def format_distance(meters: int) -> str:
+    """520 → '520m', 1460 → '1.5km'"""
+    return f"{meters}m" if meters < 1000 else f"{meters / 1000:.1f}km"
 
 
 def check_verifiable(um: UserMission, verify_type: str, allowed_statuses: tuple[str, ...] = ("in_progress",)) -> None:
