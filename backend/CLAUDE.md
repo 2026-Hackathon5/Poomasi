@@ -104,7 +104,8 @@ seed/                # 시드 미션 (H.3)
 
 ### 미션 (E)
 - `GET /api/missions/random?country=&exclude_id=` 뽑기 (E.2). 이미 진행 중이거나 완료한 미션 제외, `exclude_id`로 직전 미션 제외, 없으면 404
-- `GET /api/missions?country=&verify_type=` 미션 목록 (E.4, 지도 장소 찾기 H.2는 `verify_type=location`). 각 미션에 `my_status`(내 진행 상태, 없으면 null) 포함
+- `GET /api/missions?country=&verify_type=&available=` 미션 목록 (E.4). 각 미션에 `my_status`(내 진행 상태, 없으면 null) 포함
+  - H.2 지도 장소 찾기: `verify_type=location&available=true` → 진행 중·완료한 미션을 뺀 위치 미션 (뽑기와 같은 제외 규칙 `taken_mission_ids()`, 취소한 미션은 다시 보임)
 - `POST /api/missions/{id}/accept` 수락 → user_missions에 `in_progress` (E.2, E.4, H.2). 이미 진행 중이거나 완료했으면 409
 - `POST /api/missions` 미션 만들기 (E.3). 제목·설명·나라·분야 필수. location이면 주소를 카카오 API로 좌표 변환 후 저장, 변환 실패 시 400. `source=user`
 - `GET /api/missions/mine` 내가 만든 미션 (E.5)

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -9,7 +9,7 @@ from app.models import ACTIVE_STATUSES, Mission, Profile, UserMission
 from app.schemas.country import CountryCode
 from app.schemas.mission import MissionOut, VerifyType
 from app.schemas.user_mission import UserMissionOut
-from app.services.missions import my_statuses, visible_missions
+from app.services.missions import my_statuses, taken_mission_ids, visible_missions
 
 ALREADY_IN_PROGRESS = "이미 진행 중인 미션이에요"
 
@@ -18,19 +18,23 @@ router = APIRouter(prefix="/api/missions", tags=["E. 랜덤미션"])
 
 @router.get(
     "",
-    summary="E.4 미션 목록 (H.2 장소 찾기는 verify_type=location)",
+    summary="E.4 미션 목록 · H.2 장소 찾기 (verify_type=location&available=true)",
     response_model=list[MissionOut],
 )
 def list_missions(
     country: CountryCode | None = Query(None, description="나라 코드 KR / JP / CN / US (없으면 전체)"),
     verify_type: VerifyType | None = Query(None, description="인증 방식으로 거르기"),
+    available: bool = Query(False, description="true면 내가 진행 중이거나 완료한 미션은 빼고 준다 (H.2 지도 장소 찾기)"),
     limit: int = Query(20, ge=1, le=100, description="한 번에 가져올 개수"),
     offset: int = Query(0, ge=0, description="건너뛸 개수 (다음 페이지)"),
     profile: Profile = Depends(get_current_profile),
     db: Session = Depends(get_db),
 ) -> list[MissionOut]:
-    """최신순. 숨긴(삭제한) 미션은 빼고, 각 미션에 내 진행 상태(my_status)를 붙여 준다."""
+    """최신순. 숨긴(삭제한) 미션은 빼고, 각 미션에 내 진행 상태(my_status)를 붙여 준다.
+    H.2 지도 핀: verify_type=location&available=true → 아직 수락 안 한 위치 미션 (좌표는 lat·lng)."""
     stmt = visible_missions()
+    if available:
+        stmt = stmt.where(Mission.id.not_in(taken_mission_ids(profile.id)))
     if country:
         stmt = stmt.where(Mission.country == country)
     if verify_type:
@@ -55,12 +59,7 @@ def draw_mission(
     db: Session = Depends(get_db),
 ) -> MissionOut:
     """숨긴 미션, 내가 진행 중이거나 완료한 미션은 빼고 무작위로 1개 고른다."""
-    # 내가 이미 하고 있거나 끝낸 미션 id 목록 (취소한 미션은 다시 뽑힐 수 있다)
-    taken = select(UserMission.mission_id).where(
-        UserMission.user_id == profile.id,
-        UserMission.status.in_((*ACTIVE_STATUSES, "completed")),
-    )
-    candidates = visible_missions().where(Mission.id.not_in(taken))
+    candidates = visible_missions().where(Mission.id.not_in(taken_mission_ids(profile.id)))
     if country:
         candidates = candidates.where(Mission.country == country)
 
