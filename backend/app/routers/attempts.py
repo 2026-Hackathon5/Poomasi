@@ -13,8 +13,8 @@ from app.auth import get_current_profile
 from app.db import get_db
 from app.models import ACTIVE_STATUSES, Profile, UserMission
 from app.schemas.user_mission import UserMissionOut
-from app.schemas.verify import VerifyResultOut
-from app.services.verify import check_verifiable, complete_mission
+from app.schemas.verify import LocationIn, VerifyResultOut
+from app.services.verify import check_verifiable, complete_mission, distance_m, format_distance
 
 VERIFY_TAG = "F. 미션 인증"
 VERIFY_ERRORS = {
@@ -102,3 +102,37 @@ def verify_none(
     um = get_my_user_mission(db, profile, user_mission_id)
     check_verifiable(um, "none")
     return complete_mission(db, profile, um)
+
+
+@router.post(
+    "/{user_mission_id}/verify/location",
+    summary="F.1 위치 인증 (미션 장소 반경 안이면 성공)",
+    tags=[VERIFY_TAG],
+    response_model=VerifyResultOut,
+    responses=VERIFY_ERRORS,
+)
+def verify_location(
+    user_mission_id: int,
+    body: LocationIn,
+    profile: Profile = Depends(get_current_profile),
+    db: Session = Depends(get_db),
+) -> VerifyResultOut:
+    """반경(기본 300m) 안이면 경험치 30. 밖이면 200 + success: false와 남은 거리를 돌려준다.
+    현재 위치는 저장하지 않는다."""
+    um = get_my_user_mission(db, profile, user_mission_id)
+    check_verifiable(um, "location")
+    mission = um.mission
+    dist = round(distance_m(body.lat, body.lng, mission.lat, mission.lng))
+
+    if dist > mission.radius_m:
+        return VerifyResultOut(
+            success=False,
+            user_mission_id=um.id,
+            status=um.status,
+            message=f"{format_distance(dist)} 떨어져 있어요. {mission.place_name or '미션 장소'} 근처에서 다시 시도해주세요",
+            distance_m=dist,
+        )
+
+    result = complete_mission(db, profile, um)
+    result.distance_m = dist
+    return result
