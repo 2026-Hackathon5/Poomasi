@@ -42,7 +42,7 @@ app/
   schemas/           # Pydantic 요청/응답
   routers/           # health, me, home, missions, created_missions, attempts, posts, map
   services/          # level.py, verify.py, geocode.py, storage.py, ai_photo.py
-alembic/             # 마이그레이션 (0001_initial: 테이블 + RLS)
+alembic/             # 마이그레이션 (0001 테이블 + RLS, 0002 posts.title, 0003 user_missions.reviewed_at)
 seed/                # 시드 미션 (H.3)
 ```
 
@@ -55,7 +55,7 @@ seed/                # 시드 미션 (H.3)
 - `profiles` — id(uuid, Supabase auth 사용자 ID), email, nickname(unique, 한글·영문·숫자 1~20자), user_type(`korean` / `foreign_resident`), nationality(국적 코드, 4개 + `OTHER`), xp(int, 기본 0), created_at
 - `missions` — id, title, description, country(필수, 나라 코드), category(필수), verify_type(`location` / `photo` / `none`), source(`ai` / `user`), place_name, address, lat, lng, radius_m(기본 300), creator_id(null이면 팀 시드), created_at, deleted_at
   - `deleted_at`이 있으면 뽑기·목록·지도에서 숨긴다. 이미 수락한 사람의 내 미션 목록에는 그대로 보인다 (E.5)
-- `user_missions` — id, user_id, mission_id, status(`in_progress` / `reviewing` / `completed` / `cancelled`), accepted_at, completed_at, xp_awarded, photo_url, review(300자), deleted_at
+- `user_missions` — id, user_id, mission_id, status(`in_progress` / `reviewing` / `completed` / `cancelled`), accepted_at, completed_at, xp_awarded, photo_url, review(300자), reviewed_at(후기 작성·수정 날짜), deleted_at
   - 같은 사용자가 같은 미션을 `in_progress`·`reviewing`으로 두 번 가질 수 없다 (부분 unique index)
 - `posts` — id, author_id, content, created_at, updated_at (숨은 뜻 지식인)
 - `comments` — id, post_id, author_id, content, created_at
@@ -112,8 +112,8 @@ seed/                # 시드 미션 (H.3)
 ### 내 미션 (I.2, I.3)
 - `GET /api/me/missions?status=in_progress|completed` — `in_progress`는 `reviewing` 포함, 수락 순서. `completed`는 완료 최신순, 삭제한 기록 제외
 - `POST /api/me/missions/{id}/cancel` 진행 중 취소
-- `DELETE /api/me/missions/{id}` 완료 기록 삭제 (soft delete, 지급된 xp는 유지)
-- `PATCH /api/me/missions/{id}/review` 후기 (I.3, 1~300자)
+- `DELETE /api/me/missions/{id}` 완료 기록 삭제 (204, soft delete, 지급된 xp는 유지). 완료한 미션만, 진행 중은 취소 API
+- `PATCH /api/me/missions/{id}/review` 후기 작성·수정 (I.3, 1~300자, 완료한 미션만). 고치면 `reviewed_at`도 바뀜
 
 ### 인증 (F)
 - `POST /api/me/missions/{id}/verify/location` body `{lat, lng}`
@@ -152,15 +152,12 @@ A가 일정보다 빠르면 B의 아직 시작 안 한 이슈를 가져가 돕�
   - 기반: config, db, auth, models, alembic, main, `services/level.py`, `routers/me.py` (완료)
   - `routers/missions.py` + `schemas/mission.py` + `services/missions.py` (E.4 목록 완료, E.2 뽑기, 수락)
   - `routers/attempts.py` + `services/verify.py` (I.2 진행 중·취소, F.1·F.3·F.4 인증, I.3 완료·후기·삭제)
-  - 사진 인증 API (F.2) — B의 storage·ai_photo 부품을 연결
+  - 사진 인증 API (F.2) + `services/storage.py`, `services/ai_photo.py` (B에서 A로 변경)
   - Render 배포
-- **백엔드 B (2)** — 메인·게시판·미션 만들기·지도, A가 쓸 부품
+- **백엔드 B (2)** — 메인·게시판·미션 만들기·지도·시드
   - `services/geocode.py` + `seed/` (H.3 시드 미션, 카카오 좌표 변환) — 가장 먼저
   - `routers/posts.py` (D 숨은 뜻 게시판·댓글 전체)
   - `routers/home.py` (B.1 메인, I.4 통계)
-  - `services/storage.py`, `services/ai_photo.py` (F.2 부품, 목요일 저녁까지)
-    - `upload_photo(user_id, user_mission_id, data, content_type) -> str` (공개 주소)
-    - `judge(image, mission_title, mission_description) -> bool`, 실패 시 `AIUnavailable` 예외 (A가 reviewing 처리). AI 확정 전에는 항상 True
   - `routers/created_missions.py` (E.3 미션 만들기, E.5 내가 만든 미션·삭제) — geocode 재사용
   - `routers/map.py` (H.1 깃발)
 - 미션 응답은 `schemas/mission.py`의 `MissionOut.from_mission(m, my_status)`, 숨긴 미션 제외는 `services/missions.py`의 `visible_missions()`, 내 진행 상태는 `my_statuses()`를 재사용한다.
