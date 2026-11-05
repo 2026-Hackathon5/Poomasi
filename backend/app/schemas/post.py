@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 from app.models import Comment, Post, Profile
 from app.schemas.me import UserType
 
+TITLE_MAX = 100
 POST_MAX = 1000
 COMMENT_MAX = 500
 
@@ -28,7 +29,18 @@ def _check_content(v: str, max_len: int, what: str) -> str:
 class PostCreate(BaseModel):
     """D.2 게시글 등록 / D.3.3 게시글 수정"""
 
+    title: str = Field(description=f"1~{TITLE_MAX}자", examples=["욕 보이소"])
     content: str = Field(description=f"1~{POST_MAX}자", examples=["'눈치'가 무슨 뜻이에요?"])
+
+    @field_validator("title")
+    @classmethod
+    def check_title(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("제목을 입력해주세요")
+        if len(v) > TITLE_MAX:
+            raise ValueError(f"제목은 {TITLE_MAX}자 이하로 입력해주세요")
+        return v
 
     @field_validator("content")
     @classmethod
@@ -85,6 +97,7 @@ class PostOut(BaseModel):
     """게시글 하나 (D.3.1 목록 항목)"""
 
     id: int
+    title: str = Field(description="제목 (제목 기능 전에 쓴 글은 빈 문자열)", examples=["욕 보이소"])
     content: str
     author: AuthorOut
     comment_count: int = Field(description="댓글 수", examples=[2])
@@ -96,6 +109,7 @@ class PostOut(BaseModel):
     def from_post(cls, p: Post, comment_count: int, viewer_id: uuid.UUID) -> "PostOut":
         return cls(
             id=p.id,
+            title=p.title,
             content=p.content,
             author=AuthorOut.from_profile(p.author),
             comment_count=comment_count,

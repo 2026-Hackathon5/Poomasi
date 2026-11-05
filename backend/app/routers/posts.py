@@ -12,7 +12,6 @@ from app.models import Comment, Post, Profile
 from app.schemas.post import CommentCreate, CommentOut, PostCreate, PostDetailOut, PostOut
 
 POST_NOT_FOUND = "삭제되었거나 없는 글이에요"
-SEARCH_MAX = 100
 
 router = APIRouter(prefix="/api/posts", tags=["D. 숨은 뜻 지식인"])
 
@@ -23,11 +22,6 @@ def get_post_or_404(db: Session, post_id: int) -> Post:
     if post is None:
         raise HTTPException(404, detail=POST_NOT_FOUND)
     return post
-
-
-def _escape_like(word: str) -> str:
-    """검색어의 % _ \\ 를 글자 그대로 찾도록 바꾼다 (LIKE에서 특수 기호라서)."""
-    return word.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 def comment_counts(db: Session, post_ids: list[int]) -> dict[int, int]:
@@ -55,29 +49,18 @@ def to_detail(db: Session, post: Post, viewer_id: uuid.UUID) -> PostDetailOut:
 
 @router.get(
     "",
-    summary="D.3.1 게시글 목록 · D.1 표현 검색 (q)",
+    summary="D.3.1 게시글 목록",
     response_model=list[PostOut],
 )
 def list_posts(
-    q: str | None = Query(
-        None,
-        max_length=SEARCH_MAX,
-        description="D.1 표현 검색. 띄어쓰기로 나눈 단어가 모두 본문에 들어 있는 글만 (없으면 전체 목록)",
-        examples=["눈치 없다"],
-    ),
     limit: int = Query(20, ge=1, le=100, description="한 번에 가져올 개수"),
     offset: int = Query(0, ge=0, description="건너뛸 개수 (다음 페이지)"),
     profile: Profile = Depends(get_current_profile),
     db: Session = Depends(get_db),
 ) -> list[PostOut]:
-    """최신순. 각 글에 작성자(닉네임·국적·유형), 댓글 수, 내 글 여부(is_mine)를 붙여 준다.
-    검색 결과가 없으면 빈 배열 → 프론트는 '검색 결과가 없어요' 화면."""
-    stmt = select(Post)
-    for word in (q or "").split():
-        # 대소문자 구분 없이 '들어 있는지'로 찾는다: 눈치 → "'눈치가 없다'가 무슨 뜻이에요?"
-        stmt = stmt.where(Post.content.ilike(f"%{_escape_like(word)}%", escape="\\"))
+    """최신순. 각 글에 작성자(닉네임·국적·유형), 댓글 수, 내 글 여부(is_mine)를 붙여 준다."""
     posts = db.scalars(
-        stmt.order_by(Post.created_at.desc(), Post.id.desc()).limit(limit).offset(offset)
+        select(Post).order_by(Post.created_at.desc(), Post.id.desc()).limit(limit).offset(offset)
     ).all()
     counts = comment_counts(db, [p.id for p in posts])
     return [PostOut.from_post(p, counts.get(p.id, 0), profile.id) for p in posts]
@@ -95,7 +78,7 @@ def create_post(
     db: Session = Depends(get_db),
 ) -> PostDetailOut:
     """등록한 글을 상세 모양으로 돌려준다 → 프론트는 상세 화면으로 이동."""
-    post = Post(author_id=profile.id, content=body.content)
+    post = Post(author_id=profile.id, title=body.title, content=body.content)
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -133,10 +116,11 @@ def update_post(
     profile: Profile = Depends(get_current_profile),
     db: Session = Depends(get_db),
 ) -> PostDetailOut:
-    """본문만 바꾼다. updated_at은 DB가 자동으로 지금 시간으로 바꾼다."""
+    """제목과 본문을 바꾼다. updated_at은 DB가 자동으로 지금 시간으로 바꾼다."""
     post = get_post_or_404(db, post_id)
     if post.author_id != profile.id:
         raise HTTPException(403, detail="내가 쓴 글만 수정할 수 있어요")
+    post.title = body.title
     post.content = body.content
     db.commit()
     db.refresh(post)
