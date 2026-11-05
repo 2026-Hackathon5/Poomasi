@@ -13,8 +13,17 @@ from app.auth import get_current_profile
 from app.db import get_db
 from app.models import ACTIVE_STATUSES, Profile, UserMission
 from app.schemas.user_mission import UserMissionOut
+from app.schemas.verify import VerifyResultOut
+from app.services.verify import check_verifiable, complete_mission
 
-router = APIRouter(prefix="/api/me/missions", tags=["I. 내 프로필"])
+VERIFY_TAG = "F. 미션 인증"
+VERIFY_ERRORS = {
+    400: {"description": "이 미션의 인증 방식이 아님"},
+    404: {"description": "내 미션이 아님"},
+    409: {"description": "이미 완료했거나 진행 중이 아님"},
+}
+
+router = APIRouter(prefix="/api/me/missions")
 
 
 def get_my_user_mission(db: Session, profile: Profile, user_mission_id: int) -> UserMission:
@@ -28,6 +37,7 @@ def get_my_user_mission(db: Session, profile: Profile, user_mission_id: int) -> 
 @router.get(
     "",
     summary="I.2 진행 중 / I.3 완료 미션 목록",
+    tags=["I. 내 프로필"],
     response_model=list[UserMissionOut],
 )
 def list_my_missions(
@@ -57,6 +67,7 @@ def list_my_missions(
 @router.post(
     "/{user_mission_id}/cancel",
     summary="I.2 진행 중 미션 취소",
+    tags=["I. 내 프로필"],
     response_model=UserMissionOut,
     responses={404: {"description": "내 미션이 아님"}, 409: {"description": "진행 중이 아님"}},
 )
@@ -73,3 +84,21 @@ def cancel_my_mission(
     db.commit()
     db.refresh(um)
     return UserMissionOut.from_user_mission(um)
+
+
+@router.post(
+    "/{user_mission_id}/verify/none",
+    summary="F.3 인증 없음 미션 완료 (완료 버튼)",
+    tags=[VERIFY_TAG],
+    response_model=VerifyResultOut,
+    responses=VERIFY_ERRORS,
+)
+def verify_none(
+    user_mission_id: int,
+    profile: Profile = Depends(get_current_profile),
+    db: Session = Depends(get_db),
+) -> VerifyResultOut:
+    """확인할 조건 없이 바로 완료하고 경험치 10을 준다. 레벨이 오르면 leveled_up: true."""
+    um = get_my_user_mission(db, profile, user_mission_id)
+    check_verifiable(um, "none")
+    return complete_mission(db, profile, um)
