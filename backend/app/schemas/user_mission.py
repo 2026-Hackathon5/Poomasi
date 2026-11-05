@@ -12,7 +12,7 @@ UserMissionStatus = Literal["in_progress", "reviewing", "completed", "cancelled"
 class UserMissionOut(BaseModel):
     """내 미션 하나 (수락, I.2 진행 중, I.3 완료, B.1 추천 미션에서 같이 씀)
 
-    ⚠️ /api/me/missions/{id}의 id는 이 id(내 미션 id)이고, 미션 id(mission.id)가 아니다.
+     /api/me/missions/{id}의 id는 이 id(내 미션 id)이고, 미션 id(mission.id)가 아니다.
     """
 
     id: int = Field(description="내 미션 id (인증·취소·후기 API 주소에 사용)")
