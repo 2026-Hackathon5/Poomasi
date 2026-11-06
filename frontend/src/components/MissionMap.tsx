@@ -462,9 +462,12 @@ export default function MissionMap() {
           <div className="mission-map-meta">
             <span>한국</span>
             <span>{selectedMission.category}</span>
-            <small>
-              {new Date().toLocaleDateString('ko-KR')}
-            </small>
+            {/* 깃발(완료한 장소)은 실제로 완료한 날짜, 핀(아직 안 한 장소)은 날짜 없음 */}
+            {selectedMission.completedAt && (
+              <small>
+                {new Date(selectedMission.completedAt).toLocaleDateString('ko-KR')} 완료
+              </small>
+            )}
           </div>
 
           <h3>{selectedMission.title}</h3>
@@ -543,6 +546,7 @@ export default function MissionMap() {
                 borderRadius: '22px',
                 background: 'white',
                 color: '#4C3D34',
+                fontSize: '15px',
                 fontWeight: 'bold',
               }}
             >

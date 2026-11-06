@@ -34,8 +34,8 @@ interface UserMissionOut {
 
 // ---------- 코드 ↔ 한글 이름 ----------
 
-const COUNTRY_NAME: Record<string, string> = { KR: '한국', JP: '일본', CN: '중국', US: '미국' };
-const CATEGORY_NAME: Record<string, string> = { experience: '체험', food: '음식', place: '장소' };
+export const COUNTRY_NAME: Record<string, string> = { KR: '한국', JP: '일본', CN: '중국', US: '미국' };
+export const CATEGORY_NAME: Record<string, string> = { experience: '체험', food: '음식', place: '장소' };
 
 const codeOf = (names: Record<string, string>, name: string) =>
   Object.keys(names).find((code) => names[code] === name) ?? name;

@@ -107,7 +107,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 10px;
+  font-size: 12px; /* 태그 · 날짜 (10 → 12) */
 }
 
 .mission-map-meta span {
@@ -123,11 +123,12 @@
 
 .mission-map-card h3 {
   margin: 16px 0 10px;
-  font-size: 16px;
+  font-size: 19px; /* 미션 제목 (16 → 19) */
 }
 
+/* 설명 · 주소 · 경험치 (12 → 14) */
 .mission-map-card p {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.6;
 }
 
@@ -144,6 +145,7 @@
   border-radius: 25px;
   background: #D9D9D9;
   color: #4C3D34;
+  font-size: 15px; /* 버튼 */
   font-weight: bold;
 }
 

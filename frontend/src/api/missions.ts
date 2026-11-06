@@ -4,6 +4,7 @@ import type {
 } from '../types/mission';
 
 import { api } from './client';
+import { CATEGORY_NAME } from './missionStore';
 
 // ========================================
 // 서버 응답 모양 (백엔드 MissionOut / UserMissionOut / VerifyResultOut)
@@ -26,6 +27,7 @@ interface MissionOut {
 interface UserMissionOut {
   id: number; // 내 미션 id
   status: string;
+  completed_at: string | null;
   review: string | null;
   mission: MissionOut;
 }
@@ -51,7 +53,7 @@ function toMapMission(m: MissionOut): MapMission {
     address: m.address ?? m.place_name ?? '',
     latitude: m.lat ?? 0,
     longitude: m.lng ?? 0,
-    category: m.category,
+    category: CATEGORY_NAME[m.category] ?? m.category, // place → 장소 등 한글로
     experience: m.xp,
     accepted: false,
     completed: false,
@@ -91,6 +93,7 @@ async function loadMapMissions(): Promise<MapMission[]> {
       completed: true,
       userMissionId: flag.id,
       review: flag.review,
+      completedAt: flag.completed_at,
     });
   }
 

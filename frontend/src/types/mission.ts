@@ -55,6 +55,7 @@ export interface MapMission {
   // 서버 연결용: 수락했거나 완료한 미션이면 내 미션 id (인증·후기·삭제 API 주소에 사용)
   userMissionId?: number;
   review?: string | null;
+  completedAt?: string | null; // 완료한 시각 (깃발 카드에 완료 날짜로 표시)
 }
 
 // 지도 미션 후기 타입
