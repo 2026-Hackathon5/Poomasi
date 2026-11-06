@@ -414,7 +414,7 @@ export default function RandomMissionScreen() {
             onClick={(e) => e.stopPropagation()}
           >
 
-            <h3 style={styles.sheetTitle}>
+            <h3 style={{ ...styles.sheetTitle, fontSize: '17px' }}>
               관심있는 국가 선택
             </h3>
 
@@ -426,7 +426,8 @@ export default function RandomMissionScreen() {
                   <button
                     key={c}
                     type="button"
-                    style={styles.sheetItem}
+                    // 국가 이름은 공통 시트(13px)보다 크게
+                    style={{ ...styles.sheetItem, fontSize: '16px', padding: '16px 4px' }}
                     onClick={() => {
                       setCountry(c === ALL ? '' : c);
                       setSheetOpen(false);

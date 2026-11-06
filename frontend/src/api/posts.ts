@@ -22,7 +22,10 @@ async function request<T>(
     return await apiFetch<T>(path, options);
   } catch (e) {
     if (e instanceof ApiError && e.status === 401) {
-      throw new Error('LOGIN_REQUIRED', { cause: e });
+      // 화면에는 한국어 문구가 보이고, 글쓰기 화면은 name으로 "로그인 필요" 안내를 띄운다
+      const loginError = new Error('로그인이 필요해요. 로그인 후 다시 시도해 주세요.', { cause: e });
+      loginError.name = 'LOGIN_REQUIRED';
+      throw loginError;
     }
     throw e;
   }

@@ -464,6 +464,13 @@
 
 .post-list-bottom-nav button.active {
   background-color: #A3CCAB;
+  width: 22%; /* 탭이 4개일 때 여백을 고려한 비율 (예시) */
+  height: 40px;
+  
+  border-radius: 20px; /* 알약 형태 유지 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .post-list-bottom-nav button:disabled {
@@ -967,6 +974,13 @@
 
 .write-bottom-nav button.active {
   background: #A3CCAB;
+  width: 22%; /* 탭이 4개일 때 여백을 고려한 비율 (예시) */
+  height: 40px;
+  
+  border-radius: 20px; /* 알약 형태 유지 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .write-home-indicator {
@@ -1083,6 +1097,13 @@
 
 .pm-bottom-nav button.active {
   background: #A3CCAB;
+  width: 22%; /* 탭이 4개일 때 여백을 고려한 비율 (예시) */
+  height: 40px;
+  
+  border-radius: 20px; /* 알약 형태 유지 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pm-bottom-nav button:disabled {
@@ -1800,3 +1821,84 @@
     max-width: 100%;
   }
 }
+
+/* ========================================
+   하단 탭 크기 (모든 화면 공통 BottomNav)
+   - 위쪽의 .pm-bottom-nav 설정보다 우선한다. 크기를 바꿀 때는 여기만 고치면 된다
+======================================== */
+.app-container .pm-bottom-nav {
+  left: 16px;
+  right: 16px;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  height: 66px;
+  padding: 6px 8px;
+  border-radius: 34px;
+}
+
+.app-container .pm-bottom-nav button {
+  height: 50px;
+  padding: 0 12px;
+  border-radius: 26px;
+  font-size: 14px;
+}
+
+.app-container .pm-bottom-nav button.active {
+  width: 23%;
+  height: 50px;
+}
+
+/* ========================================
+   숨은 뜻 글자 크기 (목록 · 상세 · 글쓰기)
+   - posts.css · 위쪽 설정보다 우선한다. 글자 크기를 바꿀 때는 여기만 고치면 된다
+   - 입력칸은 16px: 아이폰에서 누를 때 화면이 확대되지 않는 크기
+======================================== */
+
+/* 목록: 오늘의 한국어 표현 */
+.app-container .daily-expression > span { font-size: 12px; }
+.app-container .daily-expression h2 { font-size: 22px; }
+.app-container .daily-meaning { font-size: 14px; line-height: 1.5; }
+.app-container .daily-example { font-size: 12px; line-height: 1.5; }
+
+/* 목록: 게시글 카드 */
+.app-container .posts-heading { font-size: 20px; }
+.app-container .post-list-card > strong { font-size: 17px; }
+.app-container .post-list-card > p { font-size: 14px; line-height: 1.5; }
+.app-container .post-author-name { font-size: 14px; }
+.app-container .post-author-type { font-size: 11px; }
+.app-container .pm-message,
+.app-container .pm-error { font-size: 14px; }
+
+/* 상세: 글 */
+.app-container .detail-main > h1 { font-size: 23px; }
+.app-container .detail-author strong { font-size: 15px; }
+.app-container .detail-author small { font-size: 12px; }
+.app-container .detail-post-content h2 { font-size: 20px; }
+.app-container .detail-post-content p { font-size: 15px; line-height: 1.6; }
+.app-container .detail-menu-popover button { font-size: 14px; }
+
+/* 상세: 댓글 */
+.app-container .detail-empty h3 { font-size: 17px; }
+.app-container .detail-empty p { font-size: 13px; line-height: 1.5; }
+.app-container .comment-meta strong { font-size: 13px; }
+.app-container .comment-meta time { font-size: 11px; }
+.app-container .author-label { font-size: 11px; }
+.app-container .comment-body p { font-size: 14px; line-height: 1.5; }
+.app-container .detail-comment-input input { font-size: 16px; }
+
+/* 글쓰기 · 수정 */
+.app-container .write-main h1 { font-size: 24px; }
+.app-container .write-subtitle { font-size: 14px; }
+.app-container .write-main label { font-size: 15px; }
+.app-container .write-main input,
+.app-container .write-main textarea { font-size: 16px; }
+.app-container .field-error { font-size: 13px; }
+.app-container .outline-btn,
+.app-container .solid-btn { font-size: 15px; }
+.app-container .pm-notice { font-size: 14px; }
+
+/* 등록 결과 · 나가기 팝업 */
+.app-container .feedback-card h2 { font-size: 20px; }
+.app-container .feedback-card p,
+.app-container .feedback-main > p { font-size: 14px; }
+.app-container .pm-modal h2 { font-size: 20px; }
+.app-container .pm-modal p { font-size: 14px; }

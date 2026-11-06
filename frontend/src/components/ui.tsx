@@ -5,6 +5,7 @@ import type { Mission } from '../types/mission';
 import { styles } from '../styles/poomasi';
 import logoHeader from '../assets/logo-header.png';
 import { BackIcon } from './icons';
+import BottomNav from './BottomNav';
 
 export function Btn({
   variant = 'brown',
@@ -103,40 +104,14 @@ export function LogoHeader({
   );
 }
 
-// 하단 탭. path가 없는 탭은 다른 팀원 화면이 붙으면 연결 (숨은 뜻 화면은 BottomNav.tsx를 씀)
-const TABS: { label: string; path?: string }[] = [
-  { label: '랜덤미션', path: '/missions' },
-  { label: '숨은 뜻', path: '/posts' },
-  { label: '지도', path: '/map' },
-  { label: '프로필', path: '/profile' },
-];
-
-export function TabBar({
-  active,
-  style,
-  tabStyle,
-}: {
+// 하단 탭: 지도 · 숨은 뜻 화면과 똑같은 BottomNav를 그린다 (모든 화면 탭 통일)
+// 예전 화면 코드에서 넘기던 active · style · tabStyle은 이제 쓰지 않는다
+// (지금 주소를 보고 BottomNav가 선택된 탭을 알아서 표시)
+export function TabBar(props: {
   active?: string;
   style?: CSSProperties;
   tabStyle?: CSSProperties;
 }) {
-  const navigate = useNavigate();
-  return (
-    <>
-      <nav style={{ ...styles.tabBar, ...style }}>
-        {TABS.map((t) => (
-          <button
-            key={t.label}
-            type="button"
-            style={{ ...styles.tab, ...tabStyle, ...(t.label === active ? styles.tabActive : null) }}
-            aria-current={t.label === active ? 'page' : undefined}
-            onClick={t.path ? () => navigate(t.path!) : undefined}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
-      <div style={styles.homeBar} />
-    </>
-  );
+  void props;
+  return <BottomNav />;
 }

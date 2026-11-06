@@ -1,7 +1,8 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import './MissionMap.css';
+import BottomNav from './BottomNav';
 
 import type { MapMission } from '../types/mission';
 import { missionsApi } from '../api/missions';
@@ -18,7 +19,8 @@ const FLAG_IMAGE_URL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(FL
 type MapMode = 'mine' | 'find';
 
 export default function MissionMap() {
-  const navigate = useNavigate();
+  // 하단 지도 탭을 누를 때마다 주소 기록(key)이 새로 생긴다 → 내 깃발 화면으로 돌아가기
+  const { key: locationKey } = useLocation();
 
   // 카카오 지도 관련 참조
   const mapElement = useRef<HTMLDivElement>(null);
@@ -37,6 +39,14 @@ export default function MissionMap() {
 
   // 화면 상태
   const [mode, setMode] = useState<MapMode>('mine');
+  const [seenLocationKey, setSeenLocationKey] = useState(locationKey);
+
+  // 지도 탭을 다시 눌렀으면(주소 기록이 새로 생김) 내 깃발 화면으로 되돌린다
+  if (locationKey !== seenLocationKey) {
+    setSeenLocationKey(locationKey);
+    setMode('mine');
+    setSelectedMission(null);
+  }
   const [showReview, setShowReview] = useState(false);
   const [showReviewDetail, setShowReviewDetail] = useState(false);
 
@@ -611,43 +621,8 @@ export default function MissionMap() {
         </div>
       )}
 
-      {/* 하단 네비게이션 */}
-      <nav className="pm-bottom-nav">
-
-        <button
-          type="button"
-          onClick={() => navigate('/missions')}
-        >
-          랜덤미션
-        </button>
-
-        <button
-          type="button"
-          onClick={() => navigate('/posts')}
-        >
-          숨은 뜻
-        </button>
-
-        <button
-          type="button"
-          className="active"
-          onClick={() => changeMode('mine')}
-        >
-          지도
-        </button>
-
-        <button
-          type="button"
-          onClick={() => navigate('/profile')}
-        >
-          프로필
-        </button>
-
-      </nav>
-
-      {/* 하단 홈 인디케이터 */}
-      <div className="pm-home-indicator" />
-
+      {/* 하단 탭: 모든 화면 공통 BottomNav (지도 탭을 누르면 내 깃발 화면으로) */}
+      <BottomNav />
     </div>
   );
 }

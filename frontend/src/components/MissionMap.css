@@ -224,12 +224,9 @@
    하단 네비게이션
 ======================================== */
 
+/* 지도 화면 하단 탭: 다른 화면과 같은 위치·크기 (BottomNav 공통 스타일), 지도 위에 보이게만 */
 .mission-map-page .pm-bottom-nav {
-  position: absolute;
   z-index: 8;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
-  left: 5%;
-  width: 90%;
 }
 
 

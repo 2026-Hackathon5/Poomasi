@@ -49,7 +49,7 @@ export const rs: Record<string, CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    fontSize: '16px',
+    fontSize: '15px',
     fontWeight: 500,
     lineHeight: '23px',
     color: '#5E5E5E',
@@ -57,7 +57,7 @@ export const rs: Record<string, CSSProperties> = {
     width: '100%',
   },
   countrySelected: { color: '#000' },
-  drawBtn: { height: '52px', borderRadius: '30px', fontSize: '20px', fontWeight: 700 },
+  drawBtn: { height: '52px', borderRadius: '30px', fontSize: '18px', fontWeight: 700 },
 
   // 미션 범위 탭 (전체 미션 / 내가 만든 미션)
   scopeTabs: { display: 'flex', height: '40px', flexShrink: 0 },
@@ -70,7 +70,7 @@ export const rs: Record<string, CSSProperties> = {
     borderBottomColor: '#fff',
     background: 'transparent',
     padding: '10px 0',
-    fontSize: '18px',
+    fontSize: '16px',
     fontWeight: 500,
     lineHeight: '20px',
     color: '#fff',
@@ -85,7 +85,7 @@ export const rs: Record<string, CSSProperties> = {
     border: `1.5px solid ${BROWN}`,
     background: MINT,
     color: GREEN,
-    fontSize: '20px',
+    fontSize: '18px',
     fontWeight: 700,
     cursor: 'pointer',
     flexShrink: 0,
@@ -110,7 +110,7 @@ export const rs: Record<string, CSSProperties> = {
     border: `1px solid ${GREEN}`,
     borderRadius: '100px',
     padding: '4px 10px',
-    fontSize: '12px',
+    fontSize: '11px',
     fontWeight: 500,
     lineHeight: '14px',
     color: '#000',
@@ -123,17 +123,17 @@ export const rs: Record<string, CSSProperties> = {
     border: 'none',
     background: 'transparent',
     padding: 0,
-    fontSize: '14px',
+    fontSize: '13px',
     fontWeight: 400,
     lineHeight: '20px',
     color: GRAY_TEXT,
     cursor: 'pointer',
   },
   cardTitle: {
-    fontSize: '24px',
+    fontSize: '20px', // 휴대폰에서 길면 잘려서 Figma 24px보다 작게
     fontWeight: 500,
-    lineHeight: '35px', // 글자 아래가 잘리지 않게 줄 높이는 넉넉히
-    margin: '-3px 0', // 대신 위아래를 줄여 차지하는 높이는 Figma와 같은 29px
+    lineHeight: '30px', // 글자 아래가 잘리지 않게 줄 높이는 넉넉히
+    margin: '-1px 0', // 대신 위아래를 줄여 차지하는 높이는 Figma와 비슷한 28px
     color: '#000',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
@@ -141,13 +141,13 @@ export const rs: Record<string, CSSProperties> = {
     flexShrink: 0,
   },
   cardFoot: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 },
-  date: { fontSize: '13px', fontWeight: 400, lineHeight: '16px', color: '#000' },
+  date: { fontSize: '12px', fontWeight: 400, lineHeight: '16px', color: '#000' },
   footRight: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '153px' },
-  xp: { fontSize: '15px', fontWeight: 700, lineHeight: '18px', color: '#000' },
+  xp: { fontSize: '14px', fontWeight: 700, lineHeight: '18px', color: '#000' },
   // 버튼: 높이 44, 좌우 20, 모서리 30, 15px Bold
-  btn: { width: 'auto', height: '44px', padding: '0 20px', borderRadius: '30px', fontSize: '15px', fontWeight: 700 },
+  btn: { width: 'auto', height: '44px', padding: '0 20px', borderRadius: '30px', fontSize: '14px', fontWeight: 700 },
   btnGray: { background: GRAY_BG, color: '#000' },
-  empty: { fontSize: '15px', lineHeight: 1.5, color: '#fff', textAlign: 'center', padding: '30px 0' },
+  empty: { fontSize: '14px', lineHeight: 1.5, color: '#fff', textAlign: 'center', padding: '30px 0' },
 
   // 미션 자세히 팝업: 배경 50% 검정, 카드 y 268, 위아래 20 · 좌우 16, 간격 25
   overlay: { background: 'rgba(0,0,0,0.5)', alignItems: 'flex-start', paddingTop: '268px' },
@@ -161,7 +161,7 @@ export const rs: Record<string, CSSProperties> = {
     flexDirection: 'column',
     gap: '25px',
   },
-  desc: { fontSize: '15px', fontWeight: 350, lineHeight: '18px', color: '#000', whiteSpace: 'pre-line' },
+  desc: { fontSize: '14px', fontWeight: 350, lineHeight: '20px', color: '#000', whiteSpace: 'pre-line' },
   btnRow: { display: 'flex', gap: '10px' },
 
   // 토스트 (미션 수락 완료!): y 689, 350×48, 회색 + 갈색 테두리

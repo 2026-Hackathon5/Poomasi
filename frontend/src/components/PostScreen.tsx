@@ -81,7 +81,7 @@ export default function PostScreen() {
     } catch (error) {
       if (
         error instanceof Error &&
-        error.message === 'LOGIN_REQUIRED'
+        error.name === 'LOGIN_REQUIRED'
       ) {
         setStatus('login');
       } else {
