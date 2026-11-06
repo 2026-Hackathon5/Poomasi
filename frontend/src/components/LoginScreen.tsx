@@ -19,7 +19,7 @@ export default function LoginScreen({ setUserInfo }: Props) {
   const handleLogin = () => {
     if (email === 'poomasi@gmail.com' && password === '123456') {
       setUserInfo({ email, nickname: '', userType: 'foreign', country: '' });
-      navigate('/complete');
+      navigate('/home'); // 로그인하면 메인 화면(B.1)으로
     } else {
       setError(true);
     }
@@ -177,4 +177,4 @@ const styles = {
   typeBtn: { flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ccc', background: '#fff' },
   typeBtnActive: { flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#3E3832', color: '#fff' },
   submitBtn: { padding: '16px', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold' },
-};
+};
