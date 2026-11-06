@@ -93,7 +93,7 @@ function MissionRow({
         }}
         aria-label={reviewed ? '후기 작성 완료' : undefined}
       >
-        {reviewed && <span style={{ color: '#fff', fontSize: '10px', fontWeight: 900, lineHeight: 1 }}>✓</span>}
+        {reviewed && <span style={{ color: '#fff', fontSize: '11px', fontWeight: 900, lineHeight: 1 }}>✓</span>}
       </span>
       <span style={styles.rowTitle}>{m.title}</span>
       {done && <span style={styles.rowDate}>{fmtShort(done.completedAt)}</span>}
