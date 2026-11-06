@@ -37,6 +37,7 @@ export default function App() {
               <p>실제 계정 생성 및 서버 인증은 아직 연결되지 않았습니다.</p>
               <p>새로고침하면 임시 사용자 정보는 초기화됩니다.</p>
               <p>메인·프로필 화면은 이번 공개 범위에 포함하지 않았습니다.</p>
+              <Link to="/profile">내 프로필 화면 보기</Link>
               <Link to="/" onClick={() => setUserInfo({ ...emptyUser })}>처음으로 돌아가기</Link>
             </section>
           }
@@ -46,7 +47,7 @@ export default function App() {
         <Route path="/posts/new" element={<PostScreen />} />
         <Route path="/posts/:postId" element={<PostDetailScreen />} />
         <Route path="/posts/:postId/edit" element={<PostEditScreen />} />
-        <Route path="/profile" element={<ProfileScreen />} />
+        <Route path="/profile" element={<ProfileScreen userInfo={userInfo} setUserInfo={setUserInfo} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
