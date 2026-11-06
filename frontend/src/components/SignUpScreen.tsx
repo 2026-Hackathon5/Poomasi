@@ -1,16 +1,17 @@
+import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import ImageButton from './ImageButton';
-import type { ScreenType, UserInfo } from '../App';
+import type { UserInfo } from '../types/user';
 import icon from '../assets/icon.png';
 
 interface Props {
-  onNavigate: (screen: ScreenType) => void;
   setUserInfo: React.Dispatch<React.SetStateAction<UserInfo>>;
 }
 
 const COUNTRY_LIST = ['대한민국', '일본', '중국', '미국', '기타'];
 
-export default function SignUpScreen({ onNavigate, setUserInfo }: Props) {
+export default function SignUpScreen({ setUserInfo }: Props) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
@@ -48,8 +49,8 @@ export default function SignUpScreen({ onNavigate, setUserInfo }: Props) {
       country,
     });
 
-    // 2. 메인(프로필) 화면으로 이동
-    onNavigate('MAIN');
+    // 2. 데모 완료 화면으로 이동
+    navigate('/complete');
   };
 
   return (
@@ -57,7 +58,7 @@ export default function SignUpScreen({ onNavigate, setUserInfo }: Props) {
       <div>
         {/* 헤더 */}
         <div style={styles.header}>
-          <button style={styles.backBtn} onClick={() => onNavigate('START')}>
+          <button style={styles.backBtn} onClick={() => navigate('/')}>
             &lt;
           </button>
           <h2 style={styles.headerTitle}>

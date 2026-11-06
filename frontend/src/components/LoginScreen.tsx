@@ -1,14 +1,15 @@
+import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import ImageButton from './ImageButton';
-import type { ScreenType, UserInfo } from '../App';
+import type { UserInfo } from '../types/user';
 import icon from '../assets/icon.png';
 
 interface Props {
-  onNavigate: (screen: ScreenType) => void;
   setUserInfo: React.Dispatch<React.SetStateAction<UserInfo>>;
 }
 
-export default function LoginScreen({ onNavigate /*setUserInfo*/ }: Props) {
+export default function LoginScreen({ setUserInfo }: Props) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
@@ -17,7 +18,8 @@ export default function LoginScreen({ onNavigate /*setUserInfo*/ }: Props) {
 
   const handleLogin = () => {
     if (email === 'poomasi@gmail.com' && password === '123456') {
-      onNavigate('MAIN');
+      setUserInfo({ email, nickname: '', userType: 'foreign', country: '' });
+      navigate('/complete');
     } else {
       setError(true);
     }
@@ -27,7 +29,7 @@ export default function LoginScreen({ onNavigate /*setUserInfo*/ }: Props) {
     <div style={styles.wrapper}>
       <div>
         <div style={styles.header}>
-          <button style={styles.backBtn} onClick={() => onNavigate('START')}>
+          <button style={styles.backBtn} onClick={() => navigate('/')}>
             &lt;
           </button>
           <h2 style={styles.headerTitle}>
@@ -73,7 +75,7 @@ export default function LoginScreen({ onNavigate /*setUserInfo*/ }: Props) {
           계정이 없으신가요?{' '}
           <span 
             style={styles.signupLink} 
-            onClick={() => onNavigate('SIGNUP')}
+            onClick={() => navigate('/signup')}
           >
             회원가입
           </span>
