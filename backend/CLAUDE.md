@@ -21,6 +21,15 @@ alembic upgrade head
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+## 배포 (Render 무료 Web Service)
+- 저장소 연결, 브랜치 `be` (금요일 main 머지 후 `main`으로 변경), Root Directory `backend`
+- Build: `pip install -r requirements.txt` / Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT` / Health Check Path: `/health`
+- Python 버전은 `backend/.python-version`(3.13)으로 고정
+- 환경변수는 `.env`와 같은 값을 Render → Environment에 넣는다. `CORS_ORIGINS`에는 Vercel 주소와 `http://localhost:5173`을 쉼표로
+- DB 마이그레이션은 배포가 하지 않는다. 모델을 바꾸면 로컬에서 `alembic upgrade head`로 같은 DB에 적용한다
+- 무료 서버는 15분 동안 요청이 없으면 잠든다 (깨는 데 30초~1분). 시연 전에 `/health`로 깨운다
+- 브랜치에 push(머지)하면 자동으로 다시 배포된다
+
 ## 환경변수 (`.env`, 커밋 금지 — `.env.example`만 커밋)
 - `DATABASE_URL` — Supabase Postgres 연결 문자열 (Connect → Direct 탭 → Session pooler). `postgresql://`로 붙여 넣어도 `postgresql+psycopg://`로 자동 변환
 - `SUPABASE_URL` — `https://<프로젝트>.supabase.co` (뒤에 `/rest/v1`이 붙어 있어도 자동으로 떼어 냄)
