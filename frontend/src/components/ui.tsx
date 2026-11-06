@@ -104,10 +104,10 @@ export function LogoHeader({
   );
 }
 
-// 하단 탭. path가 없는 탭은 다른 팀원 화면이 붙으면 연결
+// 하단 탭. path가 없는 탭은 다른 팀원 화면이 붙으면 연결 (숨은 뜻 화면은 BottomNav.tsx를 씀)
 const TABS: { label: string; path?: string }[] = [
   { label: '랜덤미션', path: '/missions' },
-  { label: '숨은 뜻' },
+  { label: '숨은 뜻', path: '/posts' },
   { label: '지도' },
   { label: '프로필', path: '/profile' },
 ];
