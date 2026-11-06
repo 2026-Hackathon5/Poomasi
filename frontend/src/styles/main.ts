@@ -84,11 +84,13 @@ export const ms: Record<string, CSSProperties> = {
   missionTitle: {
     fontSize: '24px',
     fontWeight: 500,
-    lineHeight: '29px',
+    lineHeight: '35px', // 글자 아래가 잘리지 않게 줄 높이는 넉넉히
+    margin: '-3px 0', // 대신 위아래를 줄여 차지하는 높이는 Figma와 같은 29px
     color: '#000',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
+    flexShrink: 0,
   },
   missionFoot: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   accepted: { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 400, lineHeight: '16px', color: '#000' },
@@ -132,11 +134,13 @@ export const ms: Record<string, CSSProperties> = {
   detailTitle: {
     fontSize: '24px',
     fontWeight: 700,
-    lineHeight: '29px',
+    lineHeight: '35px', // 글자 아래가 잘리지 않게 줄 높이는 넉넉히
+    margin: '-3px 0', // 대신 위아래를 줄여 차지하는 높이는 Figma와 같은 29px
     color: GREEN,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
+    flexShrink: 0,
   },
   detailDesc: { fontSize: '15px', fontWeight: 350, lineHeight: '18px', color: '#000' },
   detailInfo: { display: 'flex', alignItems: 'center', gap: '10px', color: BROWN, lineHeight: '19px' },

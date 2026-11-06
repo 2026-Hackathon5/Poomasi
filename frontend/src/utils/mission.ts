@@ -25,3 +25,10 @@ export function fmtLong(iso: string) {
 }
 
 export const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+// 태그에 붙는 인증 방식 (메인 B.1 · 랜덤 미션 E)
+export const VERIFY_TAG: Record<VerifyType, string> = {
+  photo: '사진 인증',
+  location: '위치 인증',
+  none: '인증 없음',
+};

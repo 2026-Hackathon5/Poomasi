@@ -5,6 +5,9 @@ import LoginScreen from './components/LoginScreen';
 import SignUpScreen from './components/SignUpScreen';
 import ProfileScreen from './components/ProfileScreen';
 import MainScreen from './components/MainScreen';
+import RandomMissionScreen from './components/RandomMissionScreen';
+import MissionDrawScreen from './components/MissionDrawScreen';
+import MissionStoreProvider from './mocks/MissionStoreProvider';
 import type { UserInfo } from './types/user';
 
 const emptyUser: UserInfo = { email: '', nickname: '', userType: 'foreign', country: '' };
@@ -14,6 +17,7 @@ export default function App() {
   const [userInfo, setUserInfo] = useState<UserInfo>({ ...emptyUser });
 
   return (
+    <MissionStoreProvider>
     <div className="app-container">
       <Routes>
         <Route path="/" element={<StartScreen />} />
@@ -41,9 +45,12 @@ export default function App() {
           }
         />
         <Route path="/home" element={<MainScreen userInfo={userInfo} />} />
+        <Route path="/missions" element={<RandomMissionScreen />} />
+        <Route path="/missions/draw" element={<MissionDrawScreen />} />
         <Route path="/profile" element={<ProfileScreen userInfo={userInfo} setUserInfo={setUserInfo} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
+    </MissionStoreProvider>
   );
 }
