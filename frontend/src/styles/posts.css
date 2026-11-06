@@ -3,8 +3,7 @@
 .post-list-page {
   width: 100%;
   max-width: 390px;
-  height: 844px;
-  min-height: 844px;
+  height: 100%;
   margin: 0 auto;
   position: relative;
   display: flex;
@@ -306,7 +305,7 @@
 .write-page {
   width: 100%;
   max-width: 390px;
-  height: 844px;
+  height: 100%;
   margin: 0 auto;
   position: relative;
   display: flex;
@@ -804,7 +803,7 @@
 .poomasi-page {
   width: 100%;
   max-width: 390px;
-  height: 844px;
+  height: 100%;
   margin: 0 auto;
   position: relative;
   display: flex;
@@ -825,7 +824,7 @@
 /* 상단 로고 */
 
 .pm-header {
-  height: calc(112px + env(safe-area-inset-top, 0px));
+  height: calc(72px + env(safe-area-inset-top, 0px));
   padding: env(safe-area-inset-top, 0px) 20px 0;
   flex-shrink: 0;
   display: flex;

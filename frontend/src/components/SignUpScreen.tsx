@@ -236,6 +236,7 @@ const styles = {
   wrapper: {
     padding: '24px',
     height: '100%',
+    overflowY: 'auto' as const, // 짧은 화면에서 버튼이 잘리지 않게
     display: 'flex',
     flexDirection: 'column' as const,
     justifyContent: 'space-between',
@@ -378,4 +379,4 @@ const styles = {
     cursor: 'pointer',
   },
   checkIcon: { color: '#14552A', fontWeight: 'bold' },
-};
+};

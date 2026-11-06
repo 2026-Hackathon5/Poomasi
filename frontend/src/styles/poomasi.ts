@@ -18,7 +18,8 @@ export const styles: Record<string, CSSProperties> = {
     overflow: 'hidden',
   },
   // 상단 바: Figma App bar 컴포넌트 (위 47px, 높이 44px, 로고 높이 44px) — 모든 화면 공통
-  header: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '47px 0 0', height: '91px', flexShrink: 0 },
+  // 위 여백: 피그마의 상태 표시줄 자리(47px) 대신 실제 기기의 안전 영역(노치) + 12px
+  header: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 0 0', height: 'calc(env(safe-area-inset-top, 0px) + 56px)', flexShrink: 0 },
   logo: { height: '44px', width: 'auto', display: 'block' },
   logoBtn: { border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' },
   backBtn: { position: 'absolute', left: '7px', bottom: 0, width: '44px', height: '44px', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' },
@@ -199,7 +200,9 @@ export const styles: Record<string, CSSProperties> = {
     cursor: 'pointer',
   },
   tabActive: { background: ACTIVE },
+  // 가짜 홈 막대: 실제 휴대폰에는 진짜 홈 막대가 있어서 숨긴다
   homeBar: {
+    display: 'none',
     position: 'absolute',
     bottom: '8px',
     left: '50%',

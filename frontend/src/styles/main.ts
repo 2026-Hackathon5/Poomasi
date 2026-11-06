@@ -12,7 +12,7 @@ export const ms: Record<string, CSSProperties> = {
   wrapper: { background: '#fff' },
 
   // 앱 바: 위 47px, 높이 44px
-  header: { padding: '47px 0 0', height: '91px', alignItems: 'center' },
+  header: { padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 0 0', height: 'calc(env(safe-area-inset-top, 0px) + 56px)', alignItems: 'center' },
   logo: { height: '44px' },
 
   // 본문: x 20px, y 104px부터, 덩어리 사이 25px

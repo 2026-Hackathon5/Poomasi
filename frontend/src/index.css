@@ -129,3 +129,28 @@ html, body {
 -Anton 폰트 적용 예시
 <h2 className="font-anton">회원가입</h2>
 */
+
+/* ========================================
+   휴대폰 화면 맞춤
+   - 휴대폰에서는 둥근 모서리·그림자 없이 화면을 꽉 채운다
+   - 넓은 화면(컴퓨터)에서만 폰 모양 틀로 보여 준다
+   - 가짜 홈 막대는 숨긴다 (실제 아이폰에 진짜 홈 막대가 있음)
+======================================== */
+.app-container {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (min-width: 600px) {
+  .app-container {
+    width: 390px;
+    height: min(844px, 100dvh);
+    border-radius: 24px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.pm-home-indicator,
+.mission-map-page .pm-home-indicator {
+  display: none;
+}
