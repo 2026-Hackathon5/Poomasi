@@ -19,6 +19,7 @@ export const styles: Record<string, CSSProperties> = {
   },
   header: { display: 'flex', justifyContent: 'center', padding: '38px 0 14px', flexShrink: 0 },
   logo: { height: '30px', width: 'auto', display: 'block' },
+  logoBtn: { border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' },
   content: {
     flex: 1,
     display: 'flex',
