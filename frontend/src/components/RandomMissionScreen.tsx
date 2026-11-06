@@ -46,6 +46,8 @@ export default function RandomMissionScreen() {
     mine,
     deleteMine,
     isMyMission,
+    loading,
+    error,
   } = useMissionStore();
 
   const [params, setParams] = useSearchParams();
@@ -82,20 +84,28 @@ export default function RandomMissionScreen() {
   // 미션 수락
   // ========================================
 
-  const acceptMission = (m: CatalogMission) => {
-    accept(m);
-    setDetail(null);
-    setToast('미션 수락 완료!');
+  const acceptMission = async (m: CatalogMission) => {
+    try {
+      await accept(m);
+      setDetail(null);
+      setToast('미션 수락 완료!');
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : '미션을 수락하지 못했어요.');
+    }
   };
 
   // ========================================
   // 내가 만든 미션 삭제
   // ========================================
 
-  const removeMine = (m: CatalogMission) => {
-    deleteMine(m.id);
-    setDetail(null);
-    setToast('미션이 삭제되었습니다');
+  const removeMine = async (m: CatalogMission) => {
+    try {
+      await deleteMine(m.id);
+      setDetail(null);
+      setToast('미션이 삭제되었습니다');
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : '미션을 삭제하지 못했어요.');
+    }
   };
 
   // ========================================
@@ -215,7 +225,15 @@ export default function RandomMissionScreen() {
           }
         >
 
-          {list.length === 0 && (
+          {loading && (
+            <p style={rs.empty}>미션을 불러오고 있어요...</p>
+          )}
+
+          {!loading && error && (
+            <p style={rs.empty}>{error}</p>
+          )}
+
+          {!loading && !error && list.length === 0 && (
             <p style={rs.empty}>
               {isMine
                 ? '아직 만든 미션이 없어요. 첫 미션을 만들어 보세요!'

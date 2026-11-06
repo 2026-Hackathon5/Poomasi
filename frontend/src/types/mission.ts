@@ -15,6 +15,8 @@ export interface Mission {
   acceptedAt: string;
   placeName?: string;
   address?: string;
+  // 서버 연결용: 내 미션 id (인증·취소·후기 API 주소에 사용)
+  userMissionId?: number;
 }
 
 export interface Review {
