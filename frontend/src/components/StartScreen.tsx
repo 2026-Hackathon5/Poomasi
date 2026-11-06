@@ -1,33 +1,19 @@
-import { useNavigate } from 'react-router-dom';
 //import React from 'react';
-import { useState } from 'react';
-import ImageButton from './ImageButton';
+import type { ScreenType } from '../App';
 import logo from '../assets/logo.png';
-import langKO from '../assets/Lang=KO.png';
-import langEN from '../assets/Lang=EN.png';
+import langKO from '../assets/lang=KO.png';
 
 
+interface Props {
+  onNavigate: (screen: ScreenType) => void;
+}
 
-export default function StartScreen() {
-  const navigate = useNavigate();
-
-  //true면 KO, false면 EN
-  const [isKo, setIsKo] = useState(true);
-
-  //버튼 클릭 시 언어를 토글
-  const toggleLanguage = () => {
-    setIsKo(!isKo);
-  };
-
+export default function StartScreen({ onNavigate }: Props) {
   return (
     <div style={styles.wrapper}>
       <div style={styles.topHeader}>
-        <button style={styles.langBtn} onClick={toggleLanguage}>
-          <img 
-            src={isKo ? langKO : langEN} 
-            alt="언어 선택" 
-            style={styles.langImg} 
-          />
+        <button style={styles.langBtn}>
+          <img src={langKO} alt="언어 선택" style={styles.langImg} />
         </button>
       </div>
 
@@ -38,8 +24,12 @@ export default function StartScreen() {
       </div>
 
       <div style={styles.bottomButtons}>
-        <ImageButton text="회원가입하기" onClick={() => navigate('/signup')}/>
-        <ImageButton text="로그인하기" onClick={() => navigate('/login')}/>
+        <button style={styles.mainBtn} onClick={() => onNavigate('SIGNUP')}>
+          회원가입하기
+        </button>
+        <button style={styles.subBtn} onClick={() => onNavigate('LOGIN')}>
+          로그인하기
+        </button>
       </div>
     </div>
   );
@@ -74,5 +64,25 @@ const styles = {
   },
   title: { fontSize: '32px', fontWeight: 'bold', color: '#3E3832' },
   subtitle: { fontSize: '14px', color: '#666', marginTop: '8px' },
-  bottomButtons: { display: 'flex', flexDirection: 'column' as const, gap: '12px', marginBottom: '24px' }
+  bottomButtons: { display: 'flex', flexDirection: 'column' as const, gap: '12px', marginBottom: '24px' },
+  mainBtn: {
+    padding: '16px',
+    backgroundColor: '#3E3832',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '12px',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+  },
+  subBtn: {
+    padding: '16px',
+    backgroundColor: '#3E3832',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '12px',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+  },
 };
