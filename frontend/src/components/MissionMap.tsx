@@ -6,6 +6,17 @@ import './MissionMap.css';
 import type { MapMission } from '../types/mission';
 import { missionsApi } from '../api/missions';
 
+// H.1 내가 완료한 장소에 꽂는 빨간 깃발 (SVG를 이미지로 써서 파일 없이 그린다)
+const FLAG_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="42" viewBox="0 0 36 42">' +
+  '<rect x="5" y="3" width="3" height="38" rx="1.5" fill="#B83A3A"/>' +
+  '<path d="M8 4 C14 1 20 8 26 5 C29 4 32 3 34 4 L34 20 C31 19 29 20 26 21 C20 24 14 17 8 20 Z" fill="#E04848"/>' +
+  '</svg>';
+const FLAG_IMAGE_URL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(FLAG_SVG)}`;
+
+// mine: 내가 간 곳(완료 장소 깃발, H.1) / find: 장소 미션 찾기(수락 안 한 장소 핀, H.2)
+type MapMode = 'mine' | 'find';
+
 export default function MissionMap() {
   const navigate = useNavigate();
 
@@ -14,6 +25,7 @@ export default function MissionMap() {
   const mapInstance = useRef<any>(null);
   const markers = useRef<any[]>([]);
   const toastTimer = useRef<number | null>(null);
+  const fittedMode = useRef<MapMode | null>(null); // 마지막으로 범위를 맞춘 모드
 
   // 지도 상태
   const [mapReady, setMapReady] = useState(false);
@@ -24,7 +36,7 @@ export default function MissionMap() {
     useState<MapMission | null>(null);
 
   // 화면 상태
-  const [showMissionList, setShowMissionList] = useState(false);
+  const [mode, setMode] = useState<MapMode>('mine');
   const [showReview, setShowReview] = useState(false);
   const [showReviewDetail, setShowReviewDetail] = useState(false);
 
@@ -168,15 +180,35 @@ export default function MissionMap() {
 
     markers.current = [];
 
-    missions.forEach((mission) => {
+    const shown = missions.filter((mission) =>
+      mode === 'mine'
+        ? mission.completed // 내가 완료한 장소
+        : !mission.accepted && !mission.completed // 아직 수락 안 한 장소
+    );
+
+    const flagImage =
+      mode === 'mine'
+        ? new window.kakao.maps.MarkerImage(
+            FLAG_IMAGE_URL,
+            new window.kakao.maps.Size(36, 42),
+            { offset: new window.kakao.maps.Point(6, 41) } // 깃대 아래 끝이 장소를 가리키게
+          )
+        : undefined;
+
+    const bounds = new window.kakao.maps.LatLngBounds();
+
+    shown.forEach((mission) => {
       const position = new window.kakao.maps.LatLng(
         mission.latitude,
         mission.longitude
       );
 
+      bounds.extend(position);
+
       const marker = new window.kakao.maps.Marker({
         position,
         map,
+        ...(flagImage ? { image: flagImage } : {}),
       });
 
       window.kakao.maps.event.addListener(
@@ -184,13 +216,23 @@ export default function MissionMap() {
         'click',
         () => {
           setSelectedMission(mission);
-          setShowMissionList(false);
           map.panTo(position);
         }
       );
 
       markers.current.push(marker);
     });
+
+    // 모드를 바꿨거나 처음 그릴 때만, 마커가 모두 보이게 지도 범위를 맞춘다
+    if (fittedMode.current !== mode && shown.length > 0) {
+      if (shown.length === 1) {
+        map.setLevel(5);
+        map.setCenter(bounds.getSouthWest());
+      } else {
+        map.setBounds(bounds);
+      }
+      fittedMode.current = mode;
+    }
 
     return () => {
       markers.current.forEach((marker) => {
@@ -199,7 +241,7 @@ export default function MissionMap() {
 
       markers.current = [];
     };
-  }, [missions, mapReady]);
+  }, [missions, mapReady, mode]);
 
   // ========================================
   // 4. 알림 메시지
@@ -360,8 +402,15 @@ export default function MissionMap() {
   // ========================================
 
   const visibleMissions = missions.filter(
-    (mission) => !mission.completed
+    (mission) => !mission.accepted && !mission.completed
   );
+  const myFlagCount = missions.filter((mission) => mission.completed).length;
+
+  // 모드 바꾸기 (열려 있던 카드는 닫는다)
+  const changeMode = (next: MapMode) => {
+    setSelectedMission(null);
+    setMode(next);
+  };
 
   // ========================================
   // 11. 화면 출력
@@ -381,50 +430,19 @@ export default function MissionMap() {
         type="button"
         className="mission-map-top-button"
         onClick={() => {
-          setSelectedMission(null);
-          setShowMissionList((prev) => !prev);
+          // 누를 때마다 내 깃발(mine) ↔ 수락 안 한 장소 핀(find)을 바꾼다
+          changeMode(mode === 'mine' ? 'find' : 'mine');
         }}
       >
-        장소 미션 찾기 ⌕
+        {mode === 'mine' ? '장소 미션 찾기 ⌕' : '장소 미션 목록 ☰'}
       </button>
 
-      {/* 지도 위 미션 목록 */}
-      {showMissionList && (
-        <div className="mission-map-list">
-          <strong>장소 미션 목록</strong>
-
-          {loading && (
-            <p>미션을 불러오고 있어요...</p>
-          )}
-
-          {error && <p>{error}</p>}
-
-          {visibleMissions.map((mission) => (
-            <button
-              type="button"
-              key={mission.id}
-              onClick={() => {
-                setSelectedMission(mission);
-                setShowMissionList(false);
-
-                if (mapInstance.current && window.kakao?.maps) {
-                  const position = new window.kakao.maps.LatLng(
-                    mission.latitude,
-                    mission.longitude
-                  );
-
-                  mapInstance.current.panTo(position);
-                }
-              }}
-            >
-              📍 {mission.title}
-            </button>
-          ))}
-
-          {!loading && visibleMissions.length === 0 && (
-            <p>표시할 미션이 없어요.</p>
-          )}
-        </div>
+      {/* 불러오기 실패 / 장소 찾기에 보여줄 핀이 없을 때 안내 */}
+      {error && !toast && (
+        <div className="mission-map-toast">{error}</div>
+      )}
+      {mode === 'find' && !loading && !error && visibleMissions.length === 0 && !toast && (
+        <div className="mission-map-toast">지금 도전할 수 있는 장소 미션이 없어요.</div>
       )}
 
       {/* 미션 상세 카드 */}
@@ -579,6 +597,13 @@ export default function MissionMap() {
         </div>
       )}
 
+      {/* H.1 빈 상태: 완료한 장소가 없을 때 안내 */}
+      {mode === 'mine' && !loading && !error && myFlagCount === 0 && !toast && (
+        <div className="mission-map-toast">
+          아직 위치 인증으로 완료한 장소가 없어요. 장소 미션을 찾아 도전해 보세요!
+        </div>
+      )}
+
       {/* 알림 */}
       {toast && (
         <div className="mission-map-toast">
@@ -606,6 +631,7 @@ export default function MissionMap() {
         <button
           type="button"
           className="active"
+          onClick={() => changeMode('mine')}
         >
           지도
         </button>
