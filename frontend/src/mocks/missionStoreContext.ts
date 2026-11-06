@@ -12,10 +12,23 @@ export interface MissionStore {
   setProgress: Dispatch<SetStateAction<Mission[]>>;
   completed: CompletedMission[];
   setCompleted: Dispatch<SetStateAction<CompletedMission[]>>;
-  // 아직 수락하지 않은 미션 (진행 중·완료한 미션은 빠져 있음)
+  // 아직 수락하지 않은 미션 (진행 중·완료한 미션은 빠져 있음). 내가 만든 미션도 보이지만 수락은 못 함
   available: CatalogMission[];
+  // 뽑기 후보: available에서 내가 만든 미션까지 뺀 것
+  drawable: CatalogMission[];
+  // 내가 만든 미션인지 (만든 사람은 수락·뽑기 불가 → 스스로 인증해서 경험치 쌓는 것 방지)
+  isMyMission: (id: number) => boolean;
   accept: (m: CatalogMission) => void;
+  // E.5 내가 만든 미션 (최신순)
+  mine: CatalogMission[];
+  // E.3 미션 만들기 → 내가 만든 미션 · 전체 미션 맨 위에 추가
+  createMission: (input: NewMission) => CatalogMission;
+  // E.5 내가 만든 미션 삭제 → 목록·뽑기에서 빠짐 (이미 수락한 사람의 진행 중 미션은 그대로)
+  deleteMine: (id: number) => void;
 }
+
+// 미션 만들기 폼에서 넘기는 값 (경험치 · id · 날짜는 저장할 때 붙는다)
+export type NewMission = Omit<CatalogMission, 'id' | 'xp' | 'createdAt'>;
 
 export const MissionStoreContext = createContext<MissionStore | null>(null);
 
