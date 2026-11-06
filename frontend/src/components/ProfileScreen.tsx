@@ -5,6 +5,7 @@ import type { CompletedMission, Mission } from '../types/mission';
 import { VERIFY_LABEL, fmtLong, fmtShort, todayISO } from '../utils/mission';
 import { styles } from '../styles/poomasi';
 import { Alert, Btn, Panel, Tags } from './ui';
+import MissionVerify from './MissionVerify';
 import logoHeader from '../assets/logo-header.png';
 import samplePhoto from '../assets/profile-sample-photo.jpg';
 import sampleMap from '../assets/profile-sample-map.png';
@@ -16,7 +17,7 @@ import sampleMap from '../assets/profile-sample-map.png';
  *  1. 접힌 메인 (My Profile / My Mission)
  *  2. My Profile 펼침 → [회원 정보 변경] → 수정 모드 → 국적 바텀시트 → 저장/취소
  *  3. My Mission 펼침 → 진행 중 미션 [상세정보]
- *       → 인증하기 (미션 인증 F에서 연결 예정)
+ *       → 인증하기 → MissionVerify.tsx (미션 인증 F)
  *       → 미션 취소
  *  4. 완료된 미션 [상세정보] → 후기 작성 / 작성한 후기 열람 / 기록 삭제
  *  5. [더보기] → 전체 목록
@@ -228,12 +229,13 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
   const [countryKeyword, setCountryKeyword] = useState('');
 
   // 미션
-  const [xp] = useState(30); // 미션 인증(F)을 연결하면 setXp로 경험치를 더한다
+  const [xp, setXp] = useState(30);
   const [progress, setProgress] = useState<Mission[]>(INITIAL_PROGRESS);
   const [completed, setCompleted] = useState<CompletedMission[]>(buildInitialCompleted);
 
   // 팝업 / 인증 / 토스트
   const [modal, setModal] = useState<Modal>({ kind: 'none' });
+  const [verifying, setVerifying] = useState<Mission | null>(null); // 인증 중인 미션 → MissionVerify
   const [reviewText, setReviewText] = useState('');
   const [toast, setToast] = useState(false);
 
@@ -280,6 +282,18 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
 
   const findProgress = (id: number) => progress.find((m) => m.id === id);
   const findCompleted = (id: number) => completed.find((m) => m.id === id);
+
+  // MissionVerify에서 인증에 성공하면 불림 → 진행 중에서 빼고 완료 맨 앞에 넣고 경험치 더하기
+  const finishMission = (m: Mission, photoUrl?: string) => {
+    setProgress((list) => list.filter((x) => x.id !== m.id));
+    setCompleted((list) => [{ ...m, completedAt: todayISO(), photoUrl }, ...list]);
+    setXp((v) => v + m.xp);
+  };
+
+  const startVerify = (m: Mission) => {
+    closeModal();
+    setVerifying(m);
+  };
 
   const cancelMission = (id: number) => {
     setProgress((list) => list.filter((m) => m.id !== id));
@@ -511,8 +525,7 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
               </p>
             </div>
             <div style={styles.spacer} />
-            {/* TODO(F): 미션 인증(MissionVerify) 연결 */}
-            <Btn disabled>{m.verifyType === 'none' ? '완료하기' : '인증하기'}</Btn>
+            <Btn onClick={() => startVerify(m)}>{m.verifyType === 'none' ? '완료하기' : '인증하기'}</Btn>
             <div style={styles.btnRow}>
               <Btn variant="taupe" onClick={() => cancelMission(m.id)}>
                 미션 취소
@@ -713,6 +726,9 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
 
       {renderModal()}
 
+      {verifying && (
+        <MissionVerify mission={verifying} onVerified={finishMission} onClose={() => setVerifying(null)} />
+      )}
     </div>
   );
 }
