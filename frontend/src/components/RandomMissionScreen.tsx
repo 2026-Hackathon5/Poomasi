@@ -162,24 +162,6 @@ export default function RandomMissionScreen() {
             미션 뽑기
           </Btn>
 
-          {/* 나의 지도 이동 */}
-          <button
-            type="button"
-            onClick={() => navigate('/map')}
-            style={{
-              width: '100%',
-              padding: '14px',
-              marginTop: '12px',
-              border: '1px solid #4C3D34',
-              borderRadius: '25px',
-              background: '#E7F3E5',
-              color: '#4C3D34',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-            }}
-          >
-            📍 나의 지도 보기
-          </button>
 
         </section>
 
