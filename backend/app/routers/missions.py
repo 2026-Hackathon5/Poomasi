@@ -12,6 +12,7 @@ from app.schemas.user_mission import UserMissionOut
 from app.services.missions import my_statuses, taken_mission_ids, visible_missions
 
 ALREADY_IN_PROGRESS = "이미 진행 중인 미션이에요"
+OWN_MISSION = "내가 만든 미션은 수락할 수 없어요"
 
 router = APIRouter(prefix="/api/missions", tags=["E. 랜덤미션"])
 
@@ -58,8 +59,13 @@ def draw_mission(
     profile: Profile = Depends(get_current_profile),
     db: Session = Depends(get_db),
 ) -> MissionOut:
-    """숨긴 미션, 내가 진행 중이거나 완료한 미션은 빼고 무작위로 1개 고른다."""
-    candidates = visible_missions().where(Mission.id.not_in(taken_mission_ids(profile.id)))
+    """숨긴 미션, 내가 진행 중이거나 완료한 미션, 내가 만든 미션은 빼고 무작위로 1개 고른다."""
+    candidates = visible_missions().where(
+        Mission.id.not_in(taken_mission_ids(profile.id)),
+        # 내가 만든 미션은 뽑지 않는다 (스스로 만들고 인증해서 경험치 쌓기 방지).
+        # 시드 미션은 creator_id가 null이라 != 로 쓰면 SQL에서 전부 빠지므로 IS DISTINCT FROM을 쓴다
+        Mission.creator_id.is_distinct_from(profile.id),
+    )
     if country:
         candidates = candidates.where(Mission.country == country)
 
@@ -84,6 +90,7 @@ def draw_mission(
     response_model=UserMissionOut,
     status_code=status.HTTP_201_CREATED,
     responses={
+        403: {"description": "내가 만든 미션"},
         404: {"description": "없거나 숨긴 미션"},
         409: {"description": "이미 진행 중이거나 완료한 미션"},
     },
@@ -93,10 +100,13 @@ def accept_mission(
     profile: Profile = Depends(get_current_profile),
     db: Session = Depends(get_db),
 ) -> UserMissionOut:
-    """취소했던 미션은 다시 수락할 수 있다. 응답의 id(내 미션 id)로 인증·취소 API를 부른다."""
+    """취소했던 미션은 다시 수락할 수 있다. 응답의 id(내 미션 id)로 인증·취소 API를 부른다.
+    내가 만든 미션은 수락할 수 없다 (목록에는 보이지만 프론트는 creator_id로 [내 미션] 비활성 표시)."""
     mission = db.scalar(visible_missions().where(Mission.id == mission_id))
     if mission is None:
         raise HTTPException(404, detail="미션을 찾을 수 없어요")
+    if mission.creator_id == profile.id:
+        raise HTTPException(403, detail=OWN_MISSION)
 
     current = my_statuses(db, profile.id, [mission_id]).get(mission_id)
     if current in ACTIVE_STATUSES:
