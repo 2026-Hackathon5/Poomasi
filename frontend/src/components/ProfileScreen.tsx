@@ -41,6 +41,7 @@ type Section = 'none' | 'profile' | 'mission';
 /* ───────────────────────── 상수 / 목업 데이터 ───────────────────────── */
 
 const COUNTRY_LIST = ['대한민국', '일본', '중국', '미국', '기타'];
+const KOREA = '대한민국'; // 한국인은 국적이 대한민국으로 고정 (회원가입 · 백엔드와 같은 규칙)
 const NICKNAME_RE = /^[A-Za-z0-9가-힣]{1,20}$/;
 const MAX_VISIBLE = 4; // 각 목록 최대 4개 노출, 5개 이상은 더보기
 const MIN_REVIEW_LENGTH = 2;
@@ -266,7 +267,14 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
               key={value}
               type="button"
               disabled={!editing}
-              onClick={() => setDraft({ ...draft, userType: value })}
+              onClick={() =>
+                // 한국인이면 국적을 대한민국으로 고정, 외국인으로 바꾸면 다시 직접 고르게 비움
+                setDraft({
+                  ...draft,
+                  userType: value,
+                  country: value === 'korean' ? KOREA : draft.userType === 'korean' ? '' : draft.country,
+                })
+              }
               style={{
                 ...styles.typeBtn,
                 ...(current === value ? styles.typeBtnActive : null),
@@ -280,7 +288,10 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
       </div>
 
       <label style={styles.label}>국적</label>
-      {editing ? (
+      {editing && draft.userType === 'korean' ? (
+        // 한국인은 국적을 바꿀 수 없음
+        <input type="text" value={KOREA} readOnly style={{ ...styles.input, ...styles.inputLocked }} />
+      ) : editing ? (
         <button
           type="button"
           style={{ ...styles.input, ...styles.selectBtn }}

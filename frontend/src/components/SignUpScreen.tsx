@@ -9,6 +9,7 @@ interface Props {
 }
 
 const COUNTRY_LIST = ['대한민국', '일본', '중국', '미국', '기타'];
+const KOREA = '대한민국'; // 한국인은 국적이 대한민국으로 고정 (백엔드도 korean이면 KR로 저장)
 
 export default function SignUpScreen({ setUserInfo }: Props) {
   const navigate = useNavigate();
@@ -39,6 +40,14 @@ export default function SignUpScreen({ setUserInfo }: Props) {
   const filteredCountries = COUNTRY_LIST.filter((c) =>
     c.includes(searchKeyword)
   );
+
+  // 사용자 유형 선택: 한국인이면 국적을 대한민국으로 고정, 외국인으로 바꾸면 다시 직접 고르게 비움
+  const selectUserType = (type: 'foreign' | 'korean') => {
+    if (type === 'korean') setCountry(KOREA);
+    else if (userType === 'korean') setCountry('');
+    setUserType(type);
+  };
+  const countryLocked = userType === 'korean';
 
   const handleSignUp = () => {
     // 1. App.tsx의 상태에 사용자 정보 저장
@@ -148,13 +157,13 @@ export default function SignUpScreen({ setUserInfo }: Props) {
             <div style={styles.typeSelector}>
               <button
                 style={userType === 'foreign' ? styles.typeBtnActive : styles.typeBtn}
-                onClick={() => setUserType('foreign')}
+                onClick={() => selectUserType('foreign')}
               >
                 한국에 거주하는 외국인
               </button>
               <button
                 style={userType === 'korean' ? styles.typeBtnActive : styles.typeBtn}
-                onClick={() => setUserType('korean')}
+                onClick={() => selectUserType('korean')}
               >
                 한국인
               </button>
@@ -165,14 +174,16 @@ export default function SignUpScreen({ setUserInfo }: Props) {
           <div style={styles.inputItem}>
             <label style={styles.label}>국적</label>
             <div
-              style={styles.selectInput}
-              onClick={() => setIsCountryModalOpen(true)}
+              style={{ ...styles.selectInput, ...(countryLocked ? styles.selectLocked : null) }}
+              onClick={() => !countryLocked && setIsCountryModalOpen(true)}
+              aria-disabled={countryLocked}
             >
               <span style={{ color: country ? '#3E3832' : '#A8A8A8' }}>
                 {country || '국적을 선택해주세요.'}
               </span>
-              <span style={styles.arrowIcon}>∨</span>
+              {!countryLocked && <span style={styles.arrowIcon}>∨</span>}
             </div>
+            {countryLocked && <span style={styles.lockedHint}>한국인은 국적이 대한민국으로 정해져요</span>}
           </div>
         </div>
       </div>
@@ -308,6 +319,17 @@ const styles = {
     alignItems: 'center',
     cursor: 'pointer',
     fontSize: '14px',
+  },
+  // 한국인을 고르면 국적 칸은 바꿀 수 없음
+  selectLocked: {
+    backgroundColor: '#F2F2F2',
+    cursor: 'default',
+  },
+  lockedHint: {
+    fontSize: '11px',
+    color: '#8A8A8A',
+    marginTop: '4px',
+    marginLeft: '8px',
   },
   arrowIcon: { fontSize: '12px', color: '#888' },
   modalOverlay: {
