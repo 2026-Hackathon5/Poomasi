@@ -4,6 +4,10 @@ import StartScreen from './components/StartScreen';
 import LoginScreen from './components/LoginScreen';
 import SignUpScreen from './components/SignUpScreen';
 import ProfileScreen from './components/ProfileScreen';
+import MainScreen from './components/MainScreen';
+import RandomMissionScreen from './components/RandomMissionScreen';
+import MissionDrawScreen from './components/MissionDrawScreen';
+import MissionStoreProvider from './mocks/MissionStoreProvider';
 import PostListScreen from './components/PostListScreen';
 import PostScreen from './components/PostScreen';
 import PostDetailScreen from './components/PostDetailScreen';
@@ -17,6 +21,7 @@ export default function App() {
   const [userInfo, setUserInfo] = useState<UserInfo>({ ...emptyUser });
 
   return (
+    <MissionStoreProvider>
     <div className="app-container">
       <Routes>
         <Route path="/" element={<StartScreen />} />
@@ -43,6 +48,9 @@ export default function App() {
             </section>
           }
         />
+        <Route path="/home" element={<MainScreen userInfo={userInfo} />} />
+        <Route path="/missions" element={<RandomMissionScreen />} />
+        <Route path="/missions/draw" element={<MissionDrawScreen />} />
         {/* D 숨은 뜻: 목록 / 작성 / 상세 / 수정 */}
         <Route path="/posts" element={<PostListScreen />} />
         <Route path="/posts/new" element={<PostScreen />} />
@@ -52,5 +60,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
+    </MissionStoreProvider>
   );
 }

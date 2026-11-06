@@ -8,7 +8,7 @@ import { styles } from '../styles/poomasi';
 import { Alert, Btn, LogoHeader, Panel, TabBar, Tags } from './ui';
 import MissionVerify from './MissionVerify';
 import { getLevel } from '../utils/level';
-import { INITIAL_PROGRESS, INITIAL_XP, buildInitialCompleted } from '../mocks/missions';
+import { useMissionStore } from '../mocks/missionStoreContext';
 import samplePhoto from '../assets/profile-sample-photo.jpg';
 import sampleMap from '../assets/profile-sample-map.png';
 
@@ -129,9 +129,8 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
   const [countryKeyword, setCountryKeyword] = useState('');
 
   // 미션
-  const [xp, setXp] = useState(INITIAL_XP);
-  const [progress, setProgress] = useState<Mission[]>(INITIAL_PROGRESS);
-  const [completed, setCompleted] = useState<CompletedMission[]>(buildInitialCompleted);
+  // 목업 미션 상태는 화면끼리 같이 씀 (랜덤 미션에서 수락하면 여기에도 보임)
+  const { xp, setXp, progress, setProgress, completed, setCompleted } = useMissionStore();
 
   // 팝업 / 인증 / 토스트
   const [modal, setModal] = useState<Modal>({ kind: 'none' });

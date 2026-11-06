@@ -2,10 +2,10 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { UserInfo } from '../types/user';
-import type { CompletedMission, Mission, VerifyType } from '../types/mission';
-import { VERIFY_LABEL, fmtLong, todayISO } from '../utils/mission';
+import type { Mission } from '../types/mission';
+import { VERIFY_LABEL, VERIFY_TAG, fmtLong, todayISO } from '../utils/mission';
 import { getLevel } from '../utils/level';
-import { INITIAL_PROGRESS, INITIAL_XP, buildInitialCompleted } from '../mocks/missions';
+import { useMissionStore } from '../mocks/missionStoreContext';
 import { styles } from '../styles/poomasi';
 import { ms } from '../styles/main';
 import { Btn, LogoHeader, TabBar } from './ui';
@@ -18,18 +18,13 @@ import MissionVerify from './MissionVerify';
  *  - B.1.1 레벨 카드: 레벨 · 칭호 · 경험치 바 · 다음 레벨까지 남은 XP
  *  - B.1.2 진행 중인 미션 카드: 가장 오래전에 수락한 1개
  *      카드 / [인증하기] → 미션 상세 팝업 → [인증하기] → MissionVerify (F)
- *      진행 중 미션이 없으면 [미션 뽑으러 가기]
+ *      진행 중 미션이 없으면 [미션 뽑으러 가기] → 랜덤 미션(E)
  *      [전체보기] → 프로필의 My Mission
  *  - B.1.3 나의 활동: 완료한 미션 · 진행 중 · 작성한 후기
  *
  * TODO(API): GET /api/home 응답(nickname, level, recommended, stats)으로 교체
  * ──────────────────────────────────────────────────────────────── */
 
-const VERIFY_TAG: Record<VerifyType, string> = {
-  photo: '사진 인증',
-  location: '위치 인증',
-  none: '인증 없음',
-};
 
 // 수락한 날부터 오늘까지 며칠 지났는지 → "오늘 수락" / "2일전 수락"
 function acceptedLabel(iso: string) {
@@ -79,9 +74,8 @@ export default function MainScreen({ userInfo }: Props) {
   const navigate = useNavigate();
   const nickname = userInfo?.nickname || '품앗이';
 
-  const [xp, setXp] = useState(INITIAL_XP);
-  const [progress, setProgress] = useState<Mission[]>(INITIAL_PROGRESS);
-  const [completed, setCompleted] = useState<CompletedMission[]>(buildInitialCompleted);
+  // 목업 미션 상태는 화면끼리 같이 씀 (랜덤 미션에서 수락하면 여기에도 보임)
+  const { xp, setXp, progress, setProgress, completed, setCompleted } = useMissionStore();
   const [detailOpen, setDetailOpen] = useState(false);
   const [verifying, setVerifying] = useState<Mission | null>(null);
 
@@ -186,8 +180,9 @@ export default function MainScreen({ userInfo }: Props) {
               <br />
               새로운 미션을 뽑아 볼까요?
             </p>
-            {/* TODO: 랜덤 미션(C) 화면이 붙으면 그 경로로 이동 */}
-            <Btn style={{ ...ms.btn, width: '100%' }}>미션 뽑으러 가기</Btn>
+            <Btn style={{ ...ms.btn, width: '100%' }} onClick={() => navigate('/missions')}>
+              미션 뽑으러 가기
+            </Btn>
           </section>
         )}
 

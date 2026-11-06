@@ -1,0 +1,106 @@
+// 랜덤 미션(E) 목업: 아직 수락하지 않은 미션들 (백엔드 seed/seed_missions.py에서 골라 옴)
+// TODO(API): GET /api/missions (목록), GET /api/missions/random (뽑기)으로 교체
+import type { CatalogMission, VerifyType } from '../types/mission';
+
+// 백엔드 services/level.py MISSION_XP와 같은 값
+export const MISSION_XP: Record<VerifyType, number> = { location: 30, photo: 20, none: 10 };
+
+// 국가 선택 (백엔드 나라 코드 KR / JP / CN / US)
+export const MISSION_COUNTRIES = ['한국', '일본', '중국', '미국'];
+
+type Seed = Omit<CatalogMission, 'id' | 'xp'>;
+
+const SEEDS: Seed[] = [
+  {
+    title: '덕성여대 대강의동에서 품앗이 시작하기',
+    description: '대강의동 앞에 도착해서 위치 인증을 해 보세요. 오늘 만난 친구에게 한국어로 "반가워요!"라고 인사도 건네 봐요.',
+    country: '한국',
+    category: '장소',
+    verifyType: 'location',
+    placeName: '덕성여자대학교 대강의동',
+    createdAt: '2026-11-05',
+  },
+  {
+    title: '땅콩버터잼 샌드위치 만들기',
+    description: '미국 아이들의 단골 도시락이에요.\n식빵에 땅콩버터와 딸기잼을 바르면 끝!\n완성한 샌드위치를 찍어주세요',
+    country: '미국',
+    category: '음식',
+    verifyType: 'photo',
+    createdAt: '2026-11-03',
+  },
+  {
+    title: '인천 차이나타운 걸어보기',
+    description: '중국의 분위기를 느낄 수 있는 곳!\n짜장면 박물관 근처에서 위치를 인증해주세요~',
+    country: '중국',
+    category: '장소',
+    verifyType: 'location',
+    placeName: '짜장면박물관',
+    createdAt: '2026-11-01',
+  },
+  {
+    title: '“수고하세요”는 언제 쓸까?',
+    description: '가게를 나설 때 한국 사람들이 자주 하는 "수고하세요". 언제, 누구에게 쓰는 말인지 한국 친구에게 물어봐요.',
+    country: '한국',
+    category: '체험',
+    verifyType: 'none',
+    createdAt: '2026-10-30',
+  },
+  {
+    title: '종이학 접기',
+    description: '일본의 종이접기(오리가미)로 종이학을 하나 접어서 사진을 찍어요.',
+    country: '일본',
+    category: '체험',
+    verifyType: 'photo',
+    createdAt: '2026-10-29',
+  },
+  {
+    title: '동부이촌동에서 일본 가정식 먹기',
+    description: "일본 사람들이 많이 살아 '리틀 도쿄'라고도 불리는 동부이촌동에서 돈카츠나 일본식 정식을 먹어 봐요.",
+    country: '일본',
+    category: '음식',
+    verifyType: 'location',
+    placeName: '동부이촌동',
+    createdAt: '2026-10-28',
+  },
+  {
+    title: '광장시장에서 빈대떡 먹기',
+    description: '100년 넘은 시장에서 갓 부친 빈대떡과 마약김밥을 맛봐요.',
+    country: '한국',
+    category: '음식',
+    verifyType: 'location',
+    placeName: '광장시장',
+    createdAt: '2026-10-27',
+  },
+  {
+    title: '중국어로 "니하오" 인사하기',
+    description: '중국 친구에게 "你好(니하오)"로 인사하고, 중국어 인사말 하나를 더 배워 봐요.',
+    country: '중국',
+    category: '체험',
+    verifyType: 'none',
+    createdAt: '2026-10-26',
+  },
+  {
+    title: '한복 입고 사진 찍기',
+    description: '한복을 빌려 입고 마음에 드는 곳에서 사진을 남겨요.',
+    country: '한국',
+    category: '체험',
+    verifyType: 'photo',
+    createdAt: '2026-10-25',
+  },
+  {
+    title: '이태원에서 미국식 수제버거 먹기',
+    description: '여러 나라 문화가 섞인 이태원에서 미국식 수제버거를 먹어 보고 한국 버거와 비교해 봐요.',
+    country: '미국',
+    category: '음식',
+    verifyType: 'location',
+    placeName: '이태원',
+    createdAt: '2026-10-24',
+  },
+];
+
+// 최신순 (백엔드 목록과 같은 순서)
+export const INITIAL_CATALOG: CatalogMission[] = SEEDS.map((m, i) => ({
+  ...m,
+  id: 201 + i,
+  xp: MISSION_XP[m.verifyType],
+}));

@@ -24,3 +24,8 @@ export interface CompletedMission extends Mission {
   photoUrl?: string;
   review?: Review;
 }
+
+// 아직 수락하지 않은 미션 (E. 랜덤 미션 목록·뽑기). 수락하면 acceptedAt이 붙어 Mission이 된다
+export interface CatalogMission extends Omit<Mission, 'acceptedAt'> {
+  createdAt: string; // YYYY-MM-DD (미션이 만들어진 날)
+}
