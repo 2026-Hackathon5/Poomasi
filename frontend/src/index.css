@@ -154,3 +154,9 @@ html, body {
 .mission-map-page .pm-home-indicator {
   display: none;
 }
+
+/* 아이폰 Safari는 글자색을 정하지 않은 버튼을 파란색으로 칠한다 → 기본은 검은색
+   (색을 따로 정한 버튼은 그 색이 우선) */
+button {
+  color: #000;
+}

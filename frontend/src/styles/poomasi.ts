@@ -311,6 +311,7 @@ export const styles: Record<string, CSSProperties> = {
     border: 'none',
     borderBottom: '1px solid #E4E4E4',
     background: 'transparent',
+    color: '#000', // 아이폰은 글자색 없는 버튼을 파란색으로 칠해서 검은색으로 지정
     fontSize: '13px',
     cursor: 'pointer',
     textAlign: 'left',
