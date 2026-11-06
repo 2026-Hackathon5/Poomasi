@@ -1,0 +1,131 @@
+:root {
+  --bg-mint: #DFF4DF;
+  --bg-dark-mint: #14552A;
+  --btn-brown: #3E3832;
+  --btn-disabled: #A8BBA8;
+  --text-main: #2C2C2C;
+  --text-white: #FFFFFF;
+  --error-red: #E53935;
+  --sans: 'Noto Sans KR', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--sans); 
+}
+
+/* 브라우저 기본 폰트 상속 예외 방지 (버튼, 입력창 등) */
+button,
+input,
+select,
+textarea {
+  font-family: var(--sans);
+}
+
+body {
+  font-family: var(--sans);
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* 전체 페이지 스크롤 방지 */
+}
+
+/* 상단 헤더 */
+.header {
+  flex-shrink: 0;
+  height: 56px;
+  background-color: #333;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 중앙 메인 화면 */
+.main-content {
+  flex: 1;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #000;
+}
+
+/* 하단 네비게이션 바 */
+.bottom-nav {
+  flex-shrink: 0;
+  height: 60px;
+  background-color: #222;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 어떤 기기든 화면 꽉 차게 열리는 버전 */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh; /* 모바일 브라우저 주소창 대응 */
+  overflow: hidden;
+  box-sizing: border-box;
+  background-color: var(--bg-mint);
+  border-radius: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+/*아이폰 모양으로 화면 고정하는 버전*/
+/* .app-container {
+  width: 390px;
+  height: 844px;
+  background-color: var(--bg-mint);
+  border-radius: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+} */
+
+
+/* 폰트별 클래스 정의 */
+.font-bebas {
+  font-family: 'Bebas Neue', sans-serif;
+}
+
+.font-jaro {
+  font-family: 'Jaro', sans-serif;
+}
+
+.font-jost {
+  font-family: 'Jost', sans-serif;
+}
+
+.font-anton {
+  font-family: 'Anton', sans-serif;
+}
+
+/* 폰트 적용 예시입니다!!
+-Bebas Neue 폰트 적용 예시
+<h1 className="font-bebas" style={{ fontSize: '40px' }}>POOMASI</h1>
+
+-Anton 폰트 적용 예시
+<h2 className="font-anton">회원가입</h2>
+*/
