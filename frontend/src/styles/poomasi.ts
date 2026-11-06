@@ -17,8 +17,9 @@ export const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
     overflow: 'hidden',
   },
-  header: { display: 'flex', justifyContent: 'center', padding: '38px 0 14px', flexShrink: 0 },
-  logo: { height: '30px', width: 'auto', display: 'block' },
+  // 상단 바: Figma App bar 컴포넌트 (위 47px, 높이 44px, 로고 높이 44px) — 모든 화면 공통
+  header: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '47px 0 0', height: '91px', flexShrink: 0 },
+  logo: { height: '44px', width: 'auto', display: 'block' },
   logoBtn: { border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' },
   backBtn: { position: 'absolute', left: '7px', bottom: 0, width: '44px', height: '44px', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' },
   content: {
@@ -26,7 +27,7 @@ export const styles: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
-    padding: '0 14px 118px',
+    padding: '12px 14px 118px', // 위 12px: 상단 바와 카드 사이 (메인 · 랜덤 미션은 각자 덮어씀)
     overflowY: 'auto',
   },
   card: { background: MINT, borderRadius: '4px', flexShrink: 0 },

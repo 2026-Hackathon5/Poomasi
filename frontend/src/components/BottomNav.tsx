@@ -13,7 +13,7 @@ export default function BottomNav() {
   return (
     <>
       <nav className="pm-bottom-nav">
-        <button type="button" onClick={() => navigate('/')}>
+        <button type="button" {...tab('/missions')}>
           랜덤미션
         </button>
 

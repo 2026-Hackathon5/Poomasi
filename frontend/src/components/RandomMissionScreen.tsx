@@ -7,7 +7,8 @@ import { useMissionStore } from '../mocks/missionStoreContext';
 import { styles } from '../styles/poomasi';
 import { rs } from '../styles/random';
 import { Btn, LogoHeader, TabBar } from './ui';
-import { ChevronDown, ChevronRight, MissionTags, Toast } from './missionParts';
+import { MissionTags, Toast } from './missionParts';
+import { ChevronDown, ChevronRight } from './icons';
 
 /* ────────────────────────────────────────────────────────────────
  * 랜덤 미션 (E) — 전체 미션 화면 (/missions, 하단 탭 [랜덤미션])
