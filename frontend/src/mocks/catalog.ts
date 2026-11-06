@@ -104,3 +104,40 @@ export const INITIAL_CATALOG: CatalogMission[] = SEEDS.map((m, i) => ({
   id: 201 + i,
   xp: MISSION_XP[m.verifyType],
 }));
+
+// E.5 내가 만든 미션 목업 (Figma "E. 내가 만든 미션" 예시). 만든 미션은 전체 미션 목록에도 보인다
+const MY_SEEDS: Seed[] = [
+  {
+    title: '불닭볶음면 물 없이 먹기',
+    description: '매운 불닭볶음면을 물 없이 끝까지 먹어 보고 사진으로 인증해요. 매운 음식이 약하면 우유를 준비하세요!',
+    country: '한국',
+    category: '음식',
+    verifyType: 'photo',
+    createdAt: '2026-11-04',
+  },
+  {
+    title: '편의점 삼각김밥 깔끔하게 뜯기',
+    description: '1, 2, 3 순서대로 뜯어서 김이 찢어지지 않은 삼각김밥을 찍어 보세요.',
+    country: '한국',
+    category: '음식',
+    verifyType: 'photo',
+    createdAt: '2026-10-31',
+  },
+  {
+    title: '“밥 한번 먹자” 진짜 뜻 알기',
+    description: '한국 사람이 헤어질 때 하는 "언제 밥 한번 먹자"가 진짜 약속인지, 인사인지 한국 친구에게 물어봐요.',
+    country: '한국',
+    category: '체험',
+    verifyType: 'none',
+    createdAt: '2026-10-28',
+  },
+];
+
+export const INITIAL_MINE: CatalogMission[] = MY_SEEDS.map((m, i) => ({
+  ...m,
+  id: 301 + i,
+  xp: MISSION_XP[m.verifyType],
+}));
+
+// 미션 만들기(E.3) 선택지 — 백엔드 CategoryCode experience / food / place
+export const MISSION_CATEGORIES = ['체험', '음식', '장소'];

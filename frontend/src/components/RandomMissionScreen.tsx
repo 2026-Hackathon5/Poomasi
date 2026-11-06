@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import type { CatalogMission } from '../types/mission';
 import { fmtLong } from '../utils/mission';
 import { MISSION_COUNTRIES } from '../mocks/catalog';
@@ -17,38 +17,57 @@ import { ChevronDown, ChevronRight, MissionTags, Toast } from './missionParts';
  *  - [미션 뽑기] → 미션 뽑기 화면 (/missions/draw)
  *  - 미션 카드 [자세히 >] → 미션 자세히 팝업 → [닫기] / [수락하기]
  *  - [수락하기] → "미션 수락 완료!" 토스트 → 목록에서 빠짐 (메인·프로필 진행 중에 추가)
- *  - [내가 만든 미션] 탭 → 다음 작업(E.3 · E.5)에서 연결
+ *  - 내가 만든 미션은 전체 미션에도 보이지만 [내 미션](비활성)으로 표시 → 수락 불가
+ *  - [내가 만든 미션] 탭 (/missions?tab=mine)
+ *      [미션 만들기] → 미션 만들기 화면 (/missions/new) → 게시하면 "미션 게시 완료!" 토스트
+ *      카드 [수정하기] → 버튼만 있음 (수정 기능은 아직 구현 안 함)
+ *      [자세히 >] → 팝업에서 [삭제하기]
  *
  * TODO(API): 목록 GET /api/missions, 수락 POST /api/missions/{id}/accept
+ *            내가 만든 미션 GET /api/missions/mine, 삭제 DELETE /api/missions/{id}
  * ──────────────────────────────────────────────────────────────── */
 
 const TOAST_MS = 1500;
+
+type NavState = { toast?: string; country?: string } | null;
 const ALL = '전체';
 
 export default function RandomMissionScreen() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { available, accept } = useMissionStore();
+  const { available, accept, mine, deleteMine, isMyMission } = useMissionStore();
+  const [params, setParams] = useSearchParams();
+  const isMine = params.get('tab') === 'mine';
+  const navState = location.state as NavState;
 
-  // 뽑기 화면에서 수락하고 돌아오면 토스트를 띄운다
-  const [toast, setToast] = useState(() => (location.state as { accepted?: boolean } | null)?.accepted === true);
-  const [country, setCountry] = useState((location.state as { country?: string } | null)?.country ?? '');
+  // 뽑기에서 수락하거나 미션을 게시하고 돌아오면 토스트를 띄운다
+  const [toast, setToast] = useState(navState?.toast ?? '');
+  const [country, setCountry] = useState(navState?.country ?? '');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [detail, setDetail] = useState<CatalogMission | null>(null);
 
   useEffect(() => {
     if (!toast) return;
     // 새로고침·뒤로가기로 토스트가 다시 뜨지 않게 주소의 state를 지운다
-    navigate('.', { replace: true, state: null });
-    const t = setTimeout(() => setToast(false), TOAST_MS);
+    navigate({ search: location.search }, { replace: true, state: null });
+    const t = setTimeout(() => setToast(''), TOAST_MS);
     return () => clearTimeout(t);
-  }, [toast, navigate]);
+  }, [toast, navigate, location.search]);
 
   const acceptMission = (m: CatalogMission) => {
     accept(m);
     setDetail(null);
-    setToast(true);
+    setToast('미션 수락 완료!');
   };
+
+  const removeMine = (m: CatalogMission) => {
+    deleteMine(m.id);
+    setDetail(null);
+    setToast('미션이 삭제되었습니다');
+  };
+
+  const switchTab = (mineTab: boolean) => setParams(mineTab ? { tab: 'mine' } : {}, { replace: true });
+  const list = isMine ? mine : available;
 
   return (
     <div style={{ ...styles.wrapper, ...rs.listWrapper }}>
@@ -70,19 +89,39 @@ export default function RandomMissionScreen() {
 
         {/* 미션 범위 탭 */}
         <div style={rs.scopeTabs} role="tablist">
-          <button type="button" role="tab" aria-selected="true" style={{ ...rs.scopeTab, ...rs.scopeTabActive }}>
-            전체 미션
-          </button>
-          {/* TODO(E.3 · E.5): 내가 만든 미션 화면이 붙으면 연결 */}
-          <button type="button" role="tab" aria-selected="false" style={rs.scopeTab}>
-            내가 만든 미션
-          </button>
+          {(
+            [
+              [false, '전체 미션'],
+              [true, '내가 만든 미션'],
+            ] as const
+          ).map(([mineTab, label]) => (
+            <button
+              key={label}
+              type="button"
+              role="tab"
+              aria-selected={isMine === mineTab}
+              style={{ ...rs.scopeTab, ...(isMine === mineTab ? rs.scopeTabActive : null) }}
+              onClick={() => switchTab(mineTab)}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
-        {/* E.4 미션 목록 (최신순, 진행 중·완료한 미션은 빠짐) */}
-        <section style={rs.list} aria-label="전체 미션 목록">
-          {available.length === 0 && <p style={rs.empty}>지금 도전할 수 있는 미션을 모두 수락했어요!</p>}
-          {available.map((m) => (
+        {isMine && (
+          <button type="button" style={rs.createBtn} onClick={() => navigate('/missions/new')}>
+            미션 만들기
+          </button>
+        )}
+
+        {/* E.4 전체 미션(진행 중·완료한 미션은 빠짐) / E.5 내가 만든 미션 — 최신순 */}
+        <section style={rs.list} aria-label={isMine ? '내가 만든 미션 목록' : '전체 미션 목록'}>
+          {list.length === 0 && (
+            <p style={rs.empty}>
+              {isMine ? '아직 만든 미션이 없어요. 첫 미션을 만들어 보세요!' : '지금 도전할 수 있는 미션을 모두 수락했어요!'}
+            </p>
+          )}
+          {list.map((m) => (
             <article key={m.id} style={rs.card}>
               <div style={rs.cardTop}>
                 <MissionTags m={m} />
@@ -96,9 +135,19 @@ export default function RandomMissionScreen() {
                 <span style={rs.date}>{fmtLong(m.createdAt)}</span>
                 <div style={rs.footRight}>
                   <span style={rs.xp}>+{m.xp}XP</span>
-                  <Btn style={rs.btn} onClick={() => acceptMission(m)}>
-                    수락하기
-                  </Btn>
+                  {isMine ? (
+                    // 수정 기능은 아직 구현하지 않음 (버튼만)
+                    <Btn style={rs.btn}>수정하기</Btn>
+                  ) : isMyMission(m.id) ? (
+                    // 만든 사람은 수락할 수 없음 (스스로 인증해서 경험치 쌓기 방지)
+                    <Btn style={rs.btn} disabled>
+                      내 미션
+                    </Btn>
+                  ) : (
+                    <Btn style={rs.btn} onClick={() => acceptMission(m)}>
+                      수락하기
+                    </Btn>
+                  )}
                 </div>
               </div>
             </article>
@@ -106,7 +155,7 @@ export default function RandomMissionScreen() {
         </section>
       </main>
 
-      {toast && <Toast>미션 수락 완료!</Toast>}
+      {toast && <Toast>{toast}</Toast>}
 
       <TabBar active="랜덤미션" style={rs.tabBar} tabStyle={rs.tab} />
 
@@ -125,9 +174,19 @@ export default function RandomMissionScreen() {
               <Btn style={{ ...rs.btn, ...rs.btnGray, flex: 1 }} onClick={() => setDetail(null)}>
                 닫기
               </Btn>
-              <Btn style={{ ...rs.btn, flex: 1 }} onClick={() => acceptMission(detail)}>
-                수락하기
-              </Btn>
+              {isMine ? (
+                <Btn style={{ ...rs.btn, flex: 1 }} onClick={() => removeMine(detail)}>
+                  삭제하기
+                </Btn>
+              ) : isMyMission(detail.id) ? (
+                <Btn style={{ ...rs.btn, flex: 1 }} disabled>
+                  내가 만든 미션이에요
+                </Btn>
+              ) : (
+                <Btn style={{ ...rs.btn, flex: 1 }} onClick={() => acceptMission(detail)}>
+                  수락하기
+                </Btn>
+              )}
             </div>
           </div>
         </div>

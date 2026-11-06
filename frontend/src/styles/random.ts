@@ -64,7 +64,10 @@ export const rs: Record<string, CSSProperties> = {
   scopeTab: {
     flex: 1,
     border: 'none',
-    borderBottom: '1px solid #fff',
+    // 밑줄 (활성 탭에서 색만 바꾸려고 한 줄 표기 대신 나눠 씀)
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: '#fff',
     background: 'transparent',
     padding: '10px 0',
     fontSize: '18px',
@@ -74,6 +77,19 @@ export const rs: Record<string, CSSProperties> = {
     cursor: 'pointer',
   },
   scopeTabActive: { color: BROWN, borderBottomColor: BROWN, cursor: 'default' },
+
+  // E.5 [미션 만들기]: 민트 + 갈색 테두리 1.5, 높이 52, 20px Bold 초록
+  createBtn: {
+    height: '52px',
+    borderRadius: '30px',
+    border: `1.5px solid ${BROWN}`,
+    background: MINT,
+    color: GREEN,
+    fontSize: '20px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    flexShrink: 0,
+  },
 
   // E.4 미션 목록: 카드 사이 5
   list: { display: 'flex', flexDirection: 'column', gap: '5px', flexShrink: 0 },

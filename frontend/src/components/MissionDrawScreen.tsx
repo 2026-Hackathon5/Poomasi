@@ -11,7 +11,7 @@ import { MissionTags, Toast } from './missionParts';
 /* ────────────────────────────────────────────────────────────────
  * 랜덤 미션 (E.2) — 미션 뽑기 화면 (/missions/draw)
  *
- *  - 들어오면 바로 1개를 뽑는다 (전체 미션에서 고른 국가 안에서, 진행 중·완료한 미션 제외)
+ *  - 들어오면 바로 1개를 뽑는다 (전체 미션에서 고른 국가 안에서, 진행 중·완료한 미션 · 내가 만든 미션 제외)
  *  - [다시 뽑기] → 직전 미션을 빼고 다시 뽑기. 다른 미션이 없으면 안내 후 지금 미션 유지
  *  - [수락하기] → 전체 미션으로 돌아가 "미션 수락 완료!" 토스트
  *  - [<] → 전체 미션
@@ -35,9 +35,9 @@ function pickRandom(list: CatalogMission[]) {
 export default function MissionDrawScreen() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { available, accept } = useMissionStore();
+  const { drawable, accept } = useMissionStore();
   const country = (location.state as { country?: string } | null)?.country ?? '';
-  const candidates = country ? available.filter((m) => m.country === country) : available;
+  const candidates = country ? drawable.filter((m) => m.country === country) : drawable;
 
   const [mission, setMission] = useState<CatalogMission | null>(() => pickRandom(candidates));
   const [notice, setNotice] = useState('');
@@ -59,7 +59,7 @@ export default function MissionDrawScreen() {
   const acceptMission = () => {
     if (!mission) return;
     accept(mission);
-    navigate('/missions', { state: { accepted: true, country } });
+    navigate('/missions', { state: { toast: '미션 수락 완료!', country } });
   };
 
   return (

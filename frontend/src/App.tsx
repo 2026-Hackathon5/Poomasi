@@ -7,6 +7,7 @@ import ProfileScreen from './components/ProfileScreen';
 import MainScreen from './components/MainScreen';
 import RandomMissionScreen from './components/RandomMissionScreen';
 import MissionDrawScreen from './components/MissionDrawScreen';
+import MissionCreateScreen from './components/MissionCreateScreen';
 import MissionStoreProvider from './mocks/MissionStoreProvider';
 import PostListScreen from './components/PostListScreen';
 import PostScreen from './components/PostScreen';
@@ -51,6 +52,7 @@ export default function App() {
         <Route path="/home" element={<MainScreen userInfo={userInfo} />} />
         <Route path="/missions" element={<RandomMissionScreen />} />
         <Route path="/missions/draw" element={<MissionDrawScreen />} />
+        <Route path="/missions/new" element={<MissionCreateScreen />} />
         {/* D 숨은 뜻: 목록 / 작성 / 상세 / 수정 */}
         <Route path="/posts" element={<PostListScreen />} />
         <Route path="/posts/new" element={<PostScreen />} />

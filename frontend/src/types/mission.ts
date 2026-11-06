@@ -12,6 +12,7 @@ export interface Mission {
   xp: number;
   acceptedAt: string; // YYYY-MM-DD
   placeName?: string;
+  address?: string; // 위치 미션의 주소 (만들기 E.3에서 입력)
 }
 
 export interface Review {
