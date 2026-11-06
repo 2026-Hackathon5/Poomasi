@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { UserInfo } from '../types/user';
 import type { Mission } from '../types/mission';
 import { VERIFY_LABEL, VERIFY_TAG, fmtLong, todayISO } from '../utils/mission';
-import { getLevel } from '../utils/level';
-import { useMissionStore } from '../mocks/missionStoreContext';
+import { getHome, toScreenMission } from '../api/home';
+import type { HomeOut } from '../api/home';
 import { styles } from '../styles/poomasi';
 import { ms } from '../styles/main';
 import { Btn, LogoHeader, TabBar } from './ui';
@@ -45,18 +45,39 @@ interface Props {
 
 export default function MainScreen({ userInfo }: Props) {
   const navigate = useNavigate();
-  const nickname = userInfo?.nickname || '품앗이';
 
   // 목업 미션 상태는 화면끼리 같이 씀 (랜덤 미션에서 수락하면 여기에도 보임)
-  const { xp, setXp, progress, setProgress, completed, setCompleted } = useMissionStore();
+   // GET /api/home 응답. 불러오기 전에는 null
+  const [home, setHome] = useState<HomeOut | null>(null);
+  const nickname = home?.nickname || userInfo?.nickname || '품앗이'; 
+  const [error, setError] = useState('');
+
+  // 화면에 들어오면 한 번 불러온다
+  useEffect(() => {
+    getHome()
+      .then(setHome)
+      .catch((e: Error) => setError(e.message));
+  }, []);
+
+  // 인증 후처럼 다시 불러올 때 쓰는 함수
+  const reload = () => {
+    setError('');
+    getHome()
+      .then(setHome)
+      .catch((e: Error) => setError(e.message));
+  };
   const [detailOpen, setDetailOpen] = useState(false);
   const [verifying, setVerifying] = useState<Mission | null>(null);
 
-  const level = getLevel(xp);
-  // B.1.2 추천 미션: 진행 중 미션 중 가장 오래전에 수락한 것 (백엔드 home.py와 같은 기준)
-  const recommended = [...progress].sort((a, b) => a.acceptedAt.localeCompare(b.acceptedAt))[0] ?? null;
-  const reviewCount = completed.filter((c) => c.review).length;
-
+    // 레벨 · 추천 미션 · 활동 수는 서버가 계산해서 준다
+  const level = home?.level;
+  const recommended = home?.recommended ? toScreenMission(home.recommended) : null;
+  const stats = home?.stats;
+  // 경험치 바 %: (지금 xp - 이번 레벨 시작 xp) / (다음 레벨 xp - 이번 레벨 시작 xp)
+  const percent =
+    level && level.next_level_xp
+      ? ((level.total_xp - level.current_level_xp) / (level.next_level_xp - level.current_level_xp)) * 100
+      : 100;
   const startVerify = () => {
     if (!recommended) return;
     setDetailOpen(false);
@@ -64,10 +85,8 @@ export default function MainScreen({ userInfo }: Props) {
   };
 
   // MissionVerify에서 인증 성공 → 진행 중에서 빼고 완료에 넣고 경험치 더하기 → 다음 추천 미션이 카드에 뜬다
-  const finishMission = (m: Mission, photoUrl?: string) => {
-    setProgress((list) => list.filter((x) => x.id !== m.id));
-    setCompleted((list) => [{ ...m, completedAt: todayISO(), photoUrl }, ...list]);
-    setXp((v) => v + m.xp);
+  const finishMission = () => {
+    reload();
   };
 
   const btnLabel = recommended?.verifyType === 'none' ? '완료하기' : '인증하기';
@@ -79,6 +98,14 @@ export default function MainScreen({ userInfo }: Props) {
       <LogoHeader style={ms.header} logoStyle={ms.logo} />
 
       <main className="ps-scroll" style={{ ...styles.content, ...ms.content }}>
+        {/* 불러오는 중 / 실패했을 때 */}
+        {!home && !error && <p style={{ padding: '10px', color: '#5E5E5E' }}>불러오는 중이에요...</p>}
+        {error && (
+          <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <p style={{ color: '#E53935' }}>{error}</p>
+            <Btn onClick={reload}>다시 시도</Btn>
+          </div>
+        )}
         <h1 style={ms.greeting}>
           오늘도 한 걸음,
           <br />
@@ -92,8 +119,8 @@ export default function MainScreen({ userInfo }: Props) {
               <SeedIcon />
             </span>
             <div style={ms.levelText}>
-              <p style={ms.levelLv}>Lv.{level.lv}</p>
-              <p style={ms.levelTitle}>{level.title}</p>
+              <p style={ms.levelLv}>Lv.{level?.level}</p>
+              <p style={ms.levelTitle}>{level?.title}</p>
             </div>
           </div>
           <div
@@ -101,13 +128,13 @@ export default function MainScreen({ userInfo }: Props) {
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-valuenow={Math.round(level.percent)}
+            aria-valuenow={Math.round(percent)}
           >
-            <div style={{ ...ms.barFill, width: `${level.percent}%` }} />
+            <div style={{ ...ms.barFill, width: `${percent}%` }} />
           </div>
           <div style={ms.levelFoot}>
-            <span>{level.nextXp ? `${xp}/${level.nextXp} XP` : `${xp} XP`}</span>
-            <span>{level.nextXp ? `다음 레벨까지 ${level.remain} XP` : '최고 레벨이에요!'}</span>
+            <span>{level?.next_level_xp ? `${level.total_xp}/${level.next_level_xp} XP` : `${level?.total_xp ?? 0} XP`}</span>
+            <span>{level?.next_level_xp ? `다음 레벨까지 ${level.xp_to_next} XP` : '최고 레벨이에요!'}</span>
           </div>
         </section>
 
@@ -115,7 +142,7 @@ export default function MainScreen({ userInfo }: Props) {
         {recommended ? (
           <section style={ms.missionCard} aria-label="진행 중인 미션" onClick={() => setDetailOpen(true)}>
             <div style={ms.missionHead}>
-              <span style={ms.missionCount}>진행 중인 미션 {progress.length}개</span>
+              <span style={ms.missionCount}>진행 중인 미션 {stats?.in_progress ?? 0}개</span>
               <button
                 type="button"
                 style={ms.allBtn}
@@ -165,9 +192,9 @@ export default function MainScreen({ userInfo }: Props) {
           <div style={styles.stats}>
             {(
               [
-                [completed.length, '완료한 미션'],
-                [progress.length, '진행 중'],
-                [reviewCount, '작성한 후기'],
+                [stats?.completed_missions ?? 0, '완료한 미션'],
+                [stats?.in_progress ?? 0, '진행 중'],
+                [stats?.reviews ?? 0, '작성한 후기'],
               ] as const
             ).map(([n, label]) => (
               <div key={label} style={{ ...styles.stat, ...ms.stat }}>
