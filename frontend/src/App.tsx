@@ -50,7 +50,7 @@ export default function App() {
 
   return (
     <MissionStoreProvider>
-      <div className="app-container">
+      <div className="app-container pt-[env(safe-area-inset-top)]">
         <Routes>
 
           {/* A. 시작 화면 */}
