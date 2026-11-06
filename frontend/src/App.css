@@ -188,8 +188,7 @@
 .post-list-page {
   width: 100%;
   max-width: 390px;
-  height: 844px;
-  min-height: 844px;
+  height: 100%; /* 휴대폰 화면 높이에 맞춤 (예전: 844px 고정) */
   margin: 0 auto;
   position: relative;
   display: flex;
@@ -498,7 +497,7 @@
 .write-page {
   width: 100%;
   max-width: 390px;
-  height: 844px;
+  height: 100%; /* 휴대폰 화면 높이에 맞춤 (예전: 844px 고정) */
   margin: 0 auto;
   position: relative;
   display: flex;
@@ -1003,7 +1002,7 @@
 .poomasi-page {
   width: 100%;
   max-width: 390px;
-  height: 844px;
+  height: 100%; /* 휴대폰 화면 높이에 맞춤 (예전: 844px 고정) */
   margin: 0 auto;
   position: relative;
   display: flex;

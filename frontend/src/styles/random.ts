@@ -92,7 +92,7 @@ export const rs: Record<string, CSSProperties> = {
   },
 
   // E.4 미션 목록: 카드 사이 5
-  list: { display: 'flex', flexDirection: 'column', gap: '5px', flexShrink: 0 },
+  list: { display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0 }, // 카드 사이 (Figma 5 → 12)
   card: {
     height: '157px',
     background: MINT,
