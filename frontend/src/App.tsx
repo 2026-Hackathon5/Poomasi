@@ -3,6 +3,11 @@ import { Link, Navigate, Route, Routes } from 'react-router-dom';
 import StartScreen from './components/StartScreen';
 import LoginScreen from './components/LoginScreen';
 import SignUpScreen from './components/SignUpScreen';
+import ProfileScreen from './components/ProfileScreen';
+import PostListScreen from './components/PostListScreen';
+import PostScreen from './components/PostScreen';
+import PostDetailScreen from './components/PostDetailScreen';
+import PostEditScreen from './components/PostEditScreen';
 import type { UserInfo } from './types/user';
 
 const emptyUser: UserInfo = { email: '', nickname: '', userType: 'foreign', country: '' };
@@ -36,6 +41,12 @@ export default function App() {
             </section>
           }
         />
+        {/* D 숨은 뜻: 목록 / 작성 / 상세 / 수정 */}
+        <Route path="/posts" element={<PostListScreen />} />
+        <Route path="/posts/new" element={<PostScreen />} />
+        <Route path="/posts/:postId" element={<PostDetailScreen />} />
+        <Route path="/posts/:postId/edit" element={<PostEditScreen />} />
+        <Route path="/profile" element={<ProfileScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
