@@ -464,6 +464,13 @@
 
 .post-list-bottom-nav button.active {
   background-color: #A3CCAB;
+  width: 22%; /* 탭이 4개일 때 여백을 고려한 비율 (예시) */
+  height: 40px;
+  
+  border-radius: 20px; /* 알약 형태 유지 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .post-list-bottom-nav button:disabled {
@@ -967,6 +974,13 @@
 
 .write-bottom-nav button.active {
   background: #A3CCAB;
+  width: 22%; /* 탭이 4개일 때 여백을 고려한 비율 (예시) */
+  height: 40px;
+  
+  border-radius: 20px; /* 알약 형태 유지 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .write-home-indicator {
@@ -1083,6 +1097,13 @@
 
 .pm-bottom-nav button.active {
   background: #A3CCAB;
+  width: 22%; /* 탭이 4개일 때 여백을 고려한 비율 (예시) */
+  height: 40px;
+  
+  border-radius: 20px; /* 알약 형태 유지 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pm-bottom-nav button:disabled {

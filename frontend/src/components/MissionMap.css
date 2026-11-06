@@ -12,6 +12,7 @@
   margin: 0 auto;
   overflow: hidden;
   background: #fff;
+  
 
   /* 아이폰 상단 노치 대응 */
   padding-top: env(safe-area-inset-top, 0px);

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './MissionMap.css';
+import BottomNav from './BottomNav';
 
 import type { MapMission } from '../types/mission';
 import { missionsApi } from '../api/missions';
@@ -586,7 +587,7 @@ export default function MissionMap() {
         </div>
       )}
 
-      {/* 하단 네비게이션 */}
+      {/* 하단 네비게이션
       <nav className="pm-bottom-nav">
 
         <button
@@ -617,11 +618,11 @@ export default function MissionMap() {
           프로필
         </button>
 
-      </nav>
+      </nav> */}
 
       {/* 하단 홈 인디케이터 */}
       <div className="pm-home-indicator" />
-
+      <BottomNav />
     </div>
   );
 }
