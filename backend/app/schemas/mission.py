@@ -29,7 +29,9 @@ class MissionOut(BaseModel):
     lat: float | None = Field(description="위치 미션만 값 있음")
     lng: float | None = Field(description="위치 미션만 값 있음")
     radius_m: int = Field(description="위치 인증 반경(m)", examples=[300])
-    creator_id: uuid.UUID | None = Field(description="null이면 팀 시드 미션")
+    creator_id: uuid.UUID | None = Field(
+        description="null이면 팀 시드 미션. 내 id(GET /api/me)와 같으면 내가 만든 미션 → 수락 버튼 대신 [내 미션] 비활성",
+    )
     created_at: datetime
     my_status: MyStatus | None = Field(
         default=None,
