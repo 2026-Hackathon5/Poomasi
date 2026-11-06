@@ -51,9 +51,9 @@ export default function MissionMap() {
         if (mounted) {
           setMissions(data);
         }
-      } catch {
+      } catch (err) {
         if (mounted) {
-          setError('미션 정보를 불러오지 못했어요.');
+          setError(err instanceof Error ? err.message : '미션 정보를 불러오지 못했어요.');
         }
       } finally {
         if (mounted) {
@@ -248,8 +248,8 @@ export default function MissionMap() {
       }
 
       showToast('미션을 수락했어요!');
-    } catch {
-      showToast('미션 수락에 실패했어요.');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : '미션 수락에 실패했어요.');
     }
   };
 
@@ -262,7 +262,7 @@ export default function MissionMap() {
 
     try {
       const id = selectedMission.id;
-      const updated = await missionsApi.complete(id);
+      const { missions: updated, message } = await missionsApi.complete(id);
 
       setMissions(updated);
 
@@ -274,9 +274,9 @@ export default function MissionMap() {
         setSelectedMission(completedMission);
       }
 
-      showToast('미션 수행 완료!');
-    } catch {
-      showToast('미션 완료 처리에 실패했어요.');
+      showToast(message); // 예) 미션 완료! 30 경험치를 얻었어요 🎉 Lv.2 ...
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : '미션 완료 처리에 실패했어요.');
     }
   };
 
@@ -300,8 +300,8 @@ export default function MissionMap() {
       setSelectedMission(null);
 
       showToast('삭제되었습니다.');
-    } catch {
-      showToast('기록 삭제에 실패했어요.');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : '기록 삭제에 실패했어요.');
     }
   };
 
@@ -331,8 +331,8 @@ export default function MissionMap() {
       setShowReviewDetail(true);
 
       showToast('후기가 저장되었어요!');
-    } catch {
-      showToast('후기 저장에 실패했어요.');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : '후기 저장에 실패했어요.');
     }
   };
 
