@@ -37,6 +37,7 @@ import type { UserInfo } from './types/user';
 // 로그인
 import { supabase } from './lib/supabase';
 import { getMe, toUserInfo } from './api/me';
+import { useStatusBarColor } from './utils/useStatusBarColor';
 
 const emptyUser: UserInfo = {
   email: '',
@@ -46,6 +47,9 @@ const emptyUser: UserInfo = {
 };
 
 export default function App() {
+  // 아이폰 상태 표시줄 뒤 색을 지금 화면 배경색과 맞춘다
+  useStatusBarColor();
+
   // 로그인한 사용자 정보 (로그인 화면에서 서버의 GET /api/me로 채움)
   const [userInfo, setUserInfo] = useState<UserInfo>({
     ...emptyUser,

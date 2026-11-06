@@ -235,6 +235,9 @@ export default function SignUpScreen({ setUserInfo }: Props) {
 const styles = {
   wrapper: {
     padding: '24px',
+    // 홈 화면 앱으로 열면 상태 표시줄 뒤까지 화면이 올라가서, 노치 높이만큼 위를 띄운다
+    paddingTop: 'calc(24px + env(safe-area-inset-top, 0px))',
+    paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))',
     height: '100%',
     overflowY: 'auto' as const, // 짧은 화면에서 버튼이 잘리지 않게
     display: 'flex',

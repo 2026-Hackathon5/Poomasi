@@ -48,6 +48,9 @@ export default function StartScreen() {
 const styles = {
   wrapper: {
     padding: '24px',
+    // 홈 화면 앱으로 열면 상태 표시줄 뒤까지 화면이 올라가서, 노치 높이만큼 위를 띄운다
+    paddingTop: 'calc(24px + env(safe-area-inset-top, 0px))',
+    paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))',
     height: '100%',
     display: 'flex',
     flexDirection: 'column' as const,
