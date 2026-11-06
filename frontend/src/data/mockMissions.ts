@@ -1,6 +1,6 @@
-import type { Mission } from '../types/mission';
+import type { MapMission } from '../types/mission';
 
-export const mockMissions: Mission[] = [
+export const mockMissions: MapMission[] = [
   {
     id: 1,
     title: '북촌한옥마을 구경하기',

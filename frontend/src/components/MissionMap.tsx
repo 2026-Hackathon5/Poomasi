@@ -3,48 +3,76 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './MissionMap.css';
 
-import type { Mission } from '../types/mission';
+import type { MapMission } from '../types/mission';
 import { missionsApi } from '../api/missions';
 
 export default function MissionMap() {
   const navigate = useNavigate();
 
+  // 카카오 지도 관련 참조
   const mapElement = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const markers = useRef<any[]>([]);
+  const toastTimer = useRef<number | null>(null);
 
-  const [missions, setMissions] = useState<Mission[]>([]);
+  // 지도 상태
+  const [mapReady, setMapReady] = useState(false);
+
+  // 미션 데이터
+  const [missions, setMissions] = useState<MapMission[]>([]);
   const [selectedMission, setSelectedMission] =
-    useState<Mission | null>(null);
+    useState<MapMission | null>(null);
 
-  const [myMap, setMyMap] = useState(false);
+  // 화면 상태
+  const [showMissionList, setShowMissionList] = useState(false);
   const [showReview, setShowReview] = useState(false);
-  const [showReviewDetail, setShowReviewDetail] =
-    useState(false);
+  const [showReviewDetail, setShowReviewDetail] = useState(false);
 
+  // 후기 상태
   const [reviewText, setReviewText] = useState('');
   const [savedReview, setSavedReview] = useState('');
+
+  // 알림 및 로딩 상태
   const [toast, setToast] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // 미션 데이터 불러오기
-  const loadMissions = async () => {
-    try {
-      const data = await missionsApi.list();
-      setMissions(data);
-    } catch {
-      setError('미션 정보를 불러오지 못했어요.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ========================================
+  // 1. 미션 데이터 불러오기
+  // ========================================
 
   useEffect(() => {
+    let mounted = true;
+
+    const loadMissions = async () => {
+      try {
+        const data = await missionsApi.list();
+
+        if (mounted) {
+          setMissions(data);
+        }
+      } catch {
+        if (mounted) {
+          setError('미션 정보를 불러오지 못했어요.');
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
     loadMissions();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  // 카카오 지도 SDK 불러오기
+  // ========================================
+  // 2. 카카오 지도 SDK 불러오기
+  // ========================================
+
   useEffect(() => {
     const key = import.meta.env.VITE_KAKAO_MAP_KEY;
 
@@ -53,13 +81,14 @@ export default function MissionMap() {
       return;
     }
 
-    const existingScript = document.querySelector(
-      'script[data-kakao-map="true"]'
-    ) as HTMLScriptElement | null;
+    let cancelled = false;
 
     const initialize = () => {
+      if (cancelled || !mapElement.current) return;
+      if (!window.kakao?.maps) return;
+
       window.kakao.maps.load(() => {
-        if (!mapElement.current) return;
+        if (cancelled || !mapElement.current) return;
 
         const options = {
           center: new window.kakao.maps.LatLng(
@@ -75,8 +104,13 @@ export default function MissionMap() {
         );
 
         mapInstance.current = map;
+        setMapReady(true);
       });
     };
+
+    const existingScript = document.querySelector(
+      'script[data-kakao-map="true"]'
+    ) as HTMLScriptElement | null;
 
     if (existingScript) {
       if (window.kakao?.maps) {
@@ -89,46 +123,52 @@ export default function MissionMap() {
         );
       }
 
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
     const script = document.createElement('script');
 
     script.dataset.kakaoMap = 'true';
+
     script.src =
       `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&autoload=false`;
 
     script.async = true;
-
     script.onload = initialize;
 
     script.onerror = () => {
-      setError('카카오 지도를 불러오지 못했어요.');
+      if (!cancelled) {
+        setError('카카오 지도를 불러오지 못했어요.');
+      }
     };
 
     document.head.appendChild(script);
 
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // 지도 마커 갱신
+  // ========================================
+  // 3. 지도 마커 갱신
+  // ========================================
+
   useEffect(() => {
     const map = mapInstance.current;
 
-    if (!map || !window.kakao?.maps) return;
+    if (!mapReady || !map || !window.kakao?.maps) {
+      return;
+    }
 
-    markers.current.forEach((marker) =>
-      marker.setMap(null)
-    );
+    markers.current.forEach((marker) => {
+      marker.setMap(null);
+    });
 
     markers.current = [];
 
-    const visibleMissions = missions.filter((mission) =>
-      myMap
-        ? mission.completed || mission.accepted
-        : !mission.completed
-    );
-
-    visibleMissions.forEach((mission) => {
+    missions.forEach((mission) => {
       const position = new window.kakao.maps.LatLng(
         mission.latitude,
         mission.longitude
@@ -144,38 +184,68 @@ export default function MissionMap() {
         'click',
         () => {
           setSelectedMission(mission);
+          setShowMissionList(false);
+          map.panTo(position);
         }
       );
 
       markers.current.push(marker);
     });
 
-  }, [missions, myMap]);
+    return () => {
+      markers.current.forEach((marker) => {
+        marker.setMap(null);
+      });
+
+      markers.current = [];
+    };
+  }, [missions, mapReady]);
+
+  // ========================================
+  // 4. 알림 메시지
+  // ========================================
 
   const showToast = (message: string) => {
     setToast(message);
 
-    window.setTimeout(() => {
+    if (toastTimer.current !== null) {
+      window.clearTimeout(toastTimer.current);
+    }
+
+    toastTimer.current = window.setTimeout(() => {
       setToast('');
+      toastTimer.current = null;
     }, 2500);
   };
 
-  // 미션 수락
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current !== null) {
+        window.clearTimeout(toastTimer.current);
+      }
+    };
+  }, []);
+
+  // ========================================
+  // 5. 미션 수락
+  // ========================================
+
   const handleAccept = async () => {
     if (!selectedMission) return;
 
     try {
-      const updated = await missionsApi.accept(
-        selectedMission.id
-      );
+      const id = selectedMission.id;
+      const updated = await missionsApi.accept(id);
 
       setMissions(updated);
 
-      setSelectedMission(
-        updated.find(
-          (item) => item.id === selectedMission.id
-        ) ?? null
+      const updatedMission = updated.find(
+        (item: MapMission) => item.id === id
       );
+
+      if (updatedMission) {
+        setSelectedMission(updatedMission);
+      }
 
       showToast('미션을 수락했어요!');
     } catch {
@@ -183,25 +253,37 @@ export default function MissionMap() {
     }
   };
 
-  // 미션 완료 (프로토타입 확인용)
+  // ========================================
+  // 6. 미션 완료
+  // ========================================
+
   const handleComplete = async () => {
     if (!selectedMission) return;
 
     try {
-      const updated = await missionsApi.complete(
-        selectedMission.id
-      );
+      const id = selectedMission.id;
+      const updated = await missionsApi.complete(id);
 
       setMissions(updated);
 
-      setSelectedMission(null);
+      const completedMission = updated.find(
+        (item: MapMission) => item.id === id
+      );
+
+      if (completedMission) {
+        setSelectedMission(completedMission);
+      }
+
       showToast('미션 수행 완료!');
     } catch {
       showToast('미션 완료 처리에 실패했어요.');
     }
   };
 
-  // 미션 기록 삭제
+  // ========================================
+  // 7. 미션 기록 삭제
+  // ========================================
+
   const handleDelete = async () => {
     if (!selectedMission) return;
 
@@ -223,7 +305,10 @@ export default function MissionMap() {
     }
   };
 
-  // 후기 작성
+  // ========================================
+  // 8. 후기 작성
+  // ========================================
+
   const handleSaveReview = async () => {
     if (!selectedMission || !reviewText.trim()) {
       showToast('후기를 입력해 주세요.');
@@ -231,13 +316,17 @@ export default function MissionMap() {
     }
 
     try {
-      await missionsApi.saveReview({
+      const review = {
         missionId: selectedMission.id,
-        content: reviewText.trim(),
-        createdAt: new Date().toISOString(),
-      });
+        text: reviewText.trim(),
+        writtenAt: new Date().toISOString().slice(0, 10),
+      };
 
-      setSavedReview(reviewText.trim());
+      await missionsApi.saveReview(review);
+
+      setSavedReview(review.text);
+      setReviewText('');
+
       setShowReview(false);
       setShowReviewDetail(true);
 
@@ -247,7 +336,10 @@ export default function MissionMap() {
     }
   };
 
-  // 후기 조회
+  // ========================================
+  // 9. 후기 조회
+  // ========================================
+
   const handleViewReview = async () => {
     if (!selectedMission) return;
 
@@ -256,18 +348,24 @@ export default function MissionMap() {
         selectedMission.id
       );
 
-      setSavedReview(review?.content ?? '');
+      setSavedReview(review?.text ?? '');
       setShowReviewDetail(true);
     } catch {
       showToast('후기를 불러오지 못했어요.');
     }
   };
 
-  const visibleMissions = missions.filter((mission) =>
-    myMap
-      ? mission.completed || mission.accepted
-      : !mission.completed
+  // ========================================
+  // 10. 현재 표시할 미션 목록
+  // ========================================
+
+  const visibleMissions = missions.filter(
+    (mission) => !mission.completed
   );
+
+  // ========================================
+  // 11. 화면 출력
+  // ========================================
 
   return (
     <div className="mission-map-page">
@@ -278,42 +376,46 @@ export default function MissionMap() {
         className="mission-map-area"
       />
 
-      {/* 상단 버튼 */}
+      {/* 장소 미션 찾기 */}
       <button
+        type="button"
         className="mission-map-top-button"
         onClick={() => {
-          setMyMap(false);
           setSelectedMission(null);
+          setShowMissionList((prev) => !prev);
         }}
       >
         장소 미션 찾기 ⌕
       </button>
 
-      <button
-        className="mission-map-my-button"
-        onClick={() => {
-          setMyMap(true);
-          setSelectedMission(null);
-        }}
-      >
-        나의 지도 ♧
-      </button>
-
-      {/* 미션 선택 목록 */}
-      {!selectedMission && (
+      {/* 지도 위 미션 목록 */}
+      {showMissionList && (
         <div className="mission-map-list">
-          <strong>
-            {myMap ? '나의 미션 기록' : '장소 미션 목록'}
-          </strong>
+          <strong>장소 미션 목록</strong>
 
-          {loading && <p>미션을 불러오고 있어요...</p>}
+          {loading && (
+            <p>미션을 불러오고 있어요...</p>
+          )}
 
           {error && <p>{error}</p>}
 
           {visibleMissions.map((mission) => (
             <button
+              type="button"
               key={mission.id}
-              onClick={() => setSelectedMission(mission)}
+              onClick={() => {
+                setSelectedMission(mission);
+                setShowMissionList(false);
+
+                if (mapInstance.current && window.kakao?.maps) {
+                  const position = new window.kakao.maps.LatLng(
+                    mission.latitude,
+                    mission.longitude
+                  );
+
+                  mapInstance.current.panTo(position);
+                }
+              }}
             >
               📍 {mission.title}
             </button>
@@ -325,14 +427,16 @@ export default function MissionMap() {
         </div>
       )}
 
-      {/* 선택한 미션 상세 카드 */}
+      {/* 미션 상세 카드 */}
       {selectedMission && (
         <section className="mission-map-card">
 
           <div className="mission-map-meta">
             <span>한국</span>
             <span>{selectedMission.category}</span>
-            <small>{new Date().toLocaleDateString('ko-KR')}</small>
+            <small>
+              {new Date().toLocaleDateString('ko-KR')}
+            </small>
           </div>
 
           <h3>{selectedMission.title}</h3>
@@ -351,30 +455,46 @@ export default function MissionMap() {
 
           <div className="mission-map-actions">
 
-            {myMap ? (
+            {selectedMission.completed ? (
               <>
-                <button onClick={handleDelete}>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                >
                   기록 삭제
                 </button>
 
-                <button onClick={handleViewReview}>
-                  후기 보기
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReviewText('');
+                    setShowReview(true);
+                  }}
+                >
+                  후기 작성하기
                 </button>
               </>
             ) : (
               <>
                 <button
+                  type="button"
                   onClick={() => setSelectedMission(null)}
                 >
                   닫기
                 </button>
 
                 {selectedMission.accepted ? (
-                  <button onClick={handleComplete}>
+                  <button
+                    type="button"
+                    onClick={handleComplete}
+                  >
                     미션 완료
                   </button>
                 ) : (
-                  <button onClick={handleAccept}>
+                  <button
+                    type="button"
+                    onClick={handleAccept}
+                  >
                     수락하기
                   </button>
                 )}
@@ -382,10 +502,30 @@ export default function MissionMap() {
             )}
 
           </div>
+
+          {selectedMission.completed && (
+            <button
+              type="button"
+              onClick={handleViewReview}
+              style={{
+                width: '100%',
+                marginTop: '8px',
+                padding: '10px',
+                border: '1px solid #4C3D34',
+                borderRadius: '22px',
+                background: 'white',
+                color: '#4C3D34',
+                fontWeight: 'bold',
+              }}
+            >
+              후기 보기
+            </button>
+          )}
+
         </section>
       )}
 
-      {/* 후기 작성 */}
+      {/* 후기 작성 모달 */}
       {showReview && (
         <div className="mission-map-overlay">
           <div className="mission-map-review">
@@ -394,17 +534,19 @@ export default function MissionMap() {
 
             <textarea
               value={reviewText}
-              onChange={(e) =>
-                setReviewText(e.target.value)
-              }
+              onChange={(e) => setReviewText(e.target.value)}
               placeholder="후기를 작성해주세요."
             />
 
-            <button onClick={handleSaveReview}>
+            <button
+              type="button"
+              onClick={handleSaveReview}
+            >
               저장하기
             </button>
 
             <button
+              type="button"
               className="secondary"
               onClick={() => setShowReview(false)}
             >
@@ -415,7 +557,7 @@ export default function MissionMap() {
         </div>
       )}
 
-      {/* 후기 조회 */}
+      {/* 후기 조회 모달 */}
       {showReviewDetail && (
         <div className="mission-map-overlay">
           <div className="mission-map-review">
@@ -427,6 +569,7 @@ export default function MissionMap() {
             </p>
 
             <button
+              type="button"
               onClick={() => setShowReviewDetail(false)}
             >
               확인
@@ -436,7 +579,7 @@ export default function MissionMap() {
         </div>
       )}
 
-      {/* 임시 오류 및 성공 안내 */}
+      {/* 알림 */}
       {toast && (
         <div className="mission-map-toast">
           {toast}
@@ -446,24 +589,37 @@ export default function MissionMap() {
       {/* 하단 네비게이션 */}
       <nav className="pm-bottom-nav">
 
-        <button onClick={() => navigate('/')}>
+        <button
+          type="button"
+          onClick={() => navigate('/missions')}
+        >
           랜덤미션
         </button>
 
-        <button onClick={() => navigate('/posts')}>
+        <button
+          type="button"
+          onClick={() => navigate('/posts')}
+        >
           숨은 뜻
         </button>
 
-        <button className="active">
+        <button
+          type="button"
+          className="active"
+        >
           지도
         </button>
 
-        <button onClick={() => navigate('/profile')}>
+        <button
+          type="button"
+          onClick={() => navigate('/profile')}
+        >
           프로필
         </button>
 
       </nav>
 
+      {/* 하단 홈 인디케이터 */}
       <div className="pm-home-indicator" />
 
     </div>

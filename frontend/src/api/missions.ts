@@ -1,11 +1,16 @@
 
-import type { Mission, MissionReview } from '../types/mission';
+import type {
+  MapMission,
+  MissionReview,
+} from '../types/mission';
+
 import { mockMissions } from '../data/mockMissions';
 
 const STORAGE_KEY = 'poomasi_missions';
 const REVIEW_KEY = 'poomasi_reviews';
 
-function getSavedMissions(): Mission[] {
+// 저장된 지도 미션 불러오기
+function getSavedMissions(): MapMission[] {
   const saved = localStorage.getItem(STORAGE_KEY);
 
   if (!saved) {
@@ -17,10 +22,11 @@ function getSavedMissions(): Mission[] {
     return mockMissions;
   }
 
-  return JSON.parse(saved) as Mission[];
+  return JSON.parse(saved) as MapMission[];
 }
 
-function saveMissions(missions: Mission[]) {
+// 지도 미션 저장
+function saveMissions(missions: MapMission[]) {
   localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify(missions)
@@ -28,11 +34,14 @@ function saveMissions(missions: Mission[]) {
 }
 
 export const missionsApi = {
-  async list(): Promise<Mission[]> {
+
+  // 전체 지도 미션 조회
+  async list(): Promise<MapMission[]> {
     return getSavedMissions();
   },
 
-  async accept(id: number): Promise<Mission[]> {
+  // 미션 수락
+  async accept(id: number): Promise<MapMission[]> {
     const missions = getSavedMissions();
 
     const updated = missions.map((mission) =>
@@ -42,10 +51,12 @@ export const missionsApi = {
     );
 
     saveMissions(updated);
+
     return updated;
   },
 
-  async complete(id: number): Promise<Mission[]> {
+  // 미션 완료
+  async complete(id: number): Promise<MapMission[]> {
     const missions = getSavedMissions();
 
     const updated = missions.map((mission) =>
@@ -59,18 +70,22 @@ export const missionsApi = {
     );
 
     saveMissions(updated);
+
     return updated;
   },
 
-  async remove(id: number): Promise<Mission[]> {
+  // 미션 삭제
+  async remove(id: number): Promise<MapMission[]> {
     const updated = getSavedMissions().filter(
       (mission) => mission.id !== id
     );
 
     saveMissions(updated);
+
     return updated;
   },
 
+  // 후기 저장
   async saveReview(
     review: MissionReview
   ): Promise<void> {
@@ -88,6 +103,7 @@ export const missionsApi = {
     );
   },
 
+  // 특정 미션 후기 조회
   async getReview(
     missionId: number
   ): Promise<MissionReview | undefined> {
