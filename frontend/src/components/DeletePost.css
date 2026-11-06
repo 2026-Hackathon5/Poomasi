@@ -1,0 +1,79 @@
+
+.delete-post-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  box-sizing: border-box;
+
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.delete-post-modal {
+  width: 100%;
+  max-width: 340px;
+
+  padding: 28px 22px 20px;
+  box-sizing: border-box;
+
+  border-radius: 20px;
+  background: #fff;
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+.delete-post-modal h2 {
+  margin: 0 0 12px;
+
+  color: #4C3D34;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.delete-post-modal p {
+  margin: 0 0 26px;
+
+  color: #777;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.delete-post-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.delete-post-actions button {
+  flex: 1;
+
+  padding: 13px 8px;
+
+  border: none;
+  border-radius: 25px;
+
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.delete-post-cancel {
+  background: #E8E8E8;
+  color: #4C3D34;
+}
+
+.delete-post-confirm {
+  background: #4C3D34;
+  color: #fff;
+}
+
+.delete-post-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

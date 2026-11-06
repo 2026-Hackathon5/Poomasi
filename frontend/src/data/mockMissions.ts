@@ -11,8 +11,8 @@ export const mockMissions: MapMission[] = [
     longitude: 126.983,
     category: '장소',
     experience: 50,
-    completed: false,
-    accepted: false,
+    completed: true,
+    accepted: true,
   },
   {
     id: 2,

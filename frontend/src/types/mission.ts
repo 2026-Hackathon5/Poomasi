@@ -1,4 +1,3 @@
-
 // 미션·완료 기록 화면용 타입
 // 기존 프로필, 미션 인증, 메인 화면에서 사용
 
@@ -15,6 +14,33 @@ export interface Mission {
   acceptedAt: string;
   placeName?: string;
   address?: string;
+
+  // 지도 표시용 좌표
+  latitude?: number;
+  longitude?: number;
+}
+
+// ========================================
+// 백엔드 API 응답 타입
+// ========================================
+
+export interface BackendMission {
+  id: number;
+  title: string;
+  description: string;
+  country: string;
+  category: string;
+  verify_type: VerifyType;
+  xp: number;
+  source: string;
+  place_name?: string;
+  address?: string;
+  lat?: number;
+  lng?: number;
+  radius_m?: number;
+  creator_id: string;
+  created_at: string;
+  my_status: string;
 }
 
 export interface Review {
@@ -33,10 +59,8 @@ export interface CatalogMission extends Omit<Mission, 'acceptedAt'> {
   createdAt: string;
 }
 
-
 // ========================================
 // 지도 전용 미션 타입
-// 기존 Mission과 별도로 관리
 // ========================================
 
 export interface MapMission {
@@ -50,6 +74,7 @@ export interface MapMission {
   experience: number;
   completed: boolean;
   accepted: boolean;
+  country?: string;
 }
 
 // 지도 미션 후기 타입

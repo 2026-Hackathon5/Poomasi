@@ -117,4 +117,24 @@ export const missionsApi = {
       (review) => review.missionId === missionId
     );
   },
+
+  // 특정 미션 후기 삭제
+  async removeReview(
+    missionId: number
+  ): Promise<void> {
+    const saved = localStorage.getItem(REVIEW_KEY);
+
+    const reviews: MissionReview[] = saved
+      ? JSON.parse(saved)
+      : [];
+
+    const updated = reviews.filter(
+      (review) => review.missionId !== missionId
+    );
+
+    localStorage.setItem(
+      REVIEW_KEY,
+      JSON.stringify(updated)
+    );
+  },
 };
