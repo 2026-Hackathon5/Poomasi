@@ -4,6 +4,7 @@ import StartScreen from './components/StartScreen';
 import LoginScreen from './components/LoginScreen';
 import SignUpScreen from './components/SignUpScreen';
 import ProfileScreen from './components/ProfileScreen';
+import MainScreen from './components/MainScreen';
 import type { UserInfo } from './types/user';
 
 const emptyUser: UserInfo = { email: '', nickname: '', userType: 'foreign', country: '' };
@@ -33,11 +34,13 @@ export default function App() {
               <p>실제 계정 생성 및 서버 인증은 아직 연결되지 않았습니다.</p>
               <p>새로고침하면 임시 사용자 정보는 초기화됩니다.</p>
               <p>메인·프로필 화면은 이번 공개 범위에 포함하지 않았습니다.</p>
+              <Link to="/home">메인 화면 보기</Link>
               <Link to="/profile">내 프로필 화면 보기</Link>
               <Link to="/" onClick={() => setUserInfo({ ...emptyUser })}>처음으로 돌아가기</Link>
             </section>
           }
         />
+        <Route path="/home" element={<MainScreen userInfo={userInfo} />} />
         <Route path="/profile" element={<ProfileScreen userInfo={userInfo} setUserInfo={setUserInfo} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
