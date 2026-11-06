@@ -3,6 +3,9 @@ import { useState } from 'react';
 import ImageButton from './ImageButton';
 import type { UserInfo } from '../types/user';
 import icon from '../assets/icon.png';
+import { supabase } from '../lib/supabase';
+import { ApiError } from '../api/client';
+import { getMe, toUserInfo } from '../api/me';
 
 interface Props {
   setUserInfo: React.Dispatch<React.SetStateAction<UserInfo>>;
@@ -13,15 +16,56 @@ export default function LoginScreen({ setUserInfo }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const isValid = email.trim() !== '' && password.trim() !== '';
+  const isValid = email.trim() !== '' && password.trim() !== '' && !loading;
 
-  const handleLogin = () => {
-    if (email === 'poomasi@gmail.com' && password === '123456') {
-      setUserInfo({ email, nickname: '', userType: 'foreign', country: '' });
-      navigate('/complete');
-    } else {
-      setError(true);
+  const showError = (message: string) => {
+    setErrorMsg(message);
+    setError(true);
+  };
+
+  const handleLogin = async () => {
+    if (!isValid) return;
+
+    setLoading(true);
+    setError(false);
+
+    // 1. Supabase에 이메일·비밀번호로 로그인 → 토큰은 supabase가 알아서 저장
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (loginError) {
+      setLoading(false);
+      showError(
+        loginError.message === 'Invalid login credentials'
+          ? '이메일 또는 비밀번호가 맞지 않습니다.'
+          : loginError.message === 'Email not confirmed'
+            ? '이메일 인증을 먼저 완료해 주세요.'
+            : '로그인하지 못했어요. 잠시 후 다시 시도해주세요.',
+      );
+      return;
+    }
+
+    // 2. 우리 서버에서 내 프로필(닉네임·레벨 등)을 가져온다
+    try {
+      const me = await getMe();
+      setUserInfo(toUserInfo(me));
+      navigate('/home'); // 로그인하면 메인 화면(B.1)으로
+    } catch (err) {
+      // 로그인은 됐지만 프로필이 없으면(404) 회원가입을 끝내지 않은 계정
+      if (err instanceof ApiError && err.status === 404) {
+        await supabase.auth.signOut();
+        showError('프로필이 아직 없어요. 회원가입을 먼저 진행해 주세요.');
+      } else {
+        await supabase.auth.signOut();
+        showError(err instanceof Error ? err.message : '로그인하지 못했어요.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,7 +109,7 @@ export default function LoginScreen({ setUserInfo }: Props) {
                 borderColor: error ? '#FF4D4F' : '#E0E0E0', 
               }}
             />
-            {error && <p style={styles.errorText}>이메일 또는 비밀번호가 맞지 않습니다.</p>}
+            {error && <p style={styles.errorText}>{errorMsg}</p>}
           </div>
         </div>
       </div>
@@ -82,8 +126,8 @@ export default function LoginScreen({ setUserInfo }: Props) {
         </p>
 
         <ImageButton 
-          text="로그인" 
-          onClick={handleLogin} 
+          text={loading ? '로그인 중...' : '로그인'}
+          onClick={() => void handleLogin()}
           disabled={!isValid} 
         />
       </div>

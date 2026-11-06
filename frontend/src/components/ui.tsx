@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Mission } from '../types/mission';
 import { styles } from '../styles/poomasi';
 import logoHeader from '../assets/logo-header.png';
+import { BackIcon } from './icons';
 
 export function Btn({
   variant = 'brown',
@@ -92,9 +93,7 @@ export function LogoHeader({
     <header style={{ ...styles.header, ...style, position: 'relative' }}>
       {onBack && (
         <button type="button" aria-label="뒤로가기" style={styles.backBtn} onClick={onBack}>
-          <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
-            <path d="M27 11 L16 22 L27 33" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <BackIcon />
         </button>
       )}
       <button type="button" aria-label="메인 화면으로" style={styles.logoBtn} onClick={() => navigate('/home')}>
@@ -109,6 +108,7 @@ const TABS: { label: string; path?: string }[] = [
   { label: '랜덤미션', path: '/missions' },
   { label: '숨은 뜻', path: '/posts' },
   { label: '지도' },
+  { label: '지도', path: '/map' },
   { label: '프로필', path: '/profile' },
 ];
 

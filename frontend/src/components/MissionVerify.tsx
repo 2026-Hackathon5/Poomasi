@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Mission } from '../types/mission';
-import { sleep } from '../utils/mission';
 import { styles } from '../styles/poomasi';
 import { Alert, Btn, Panel } from './ui';
 import samplePhoto from '../assets/profile-sample-photo.jpg';
+import { verifyLocation, verifyNone, verifyPhoto } from '../api/verify';
+import type { VerifyResult } from '../api/verify';
 
 /* ────────────────────────────────────────────────────────────────
  * 미션 인증 (F) — 진행 중 미션의 [인증하기]를 누르면 뜨는 팝업 흐름
@@ -18,22 +19,12 @@ import samplePhoto from '../assets/profile-sample-photo.jpg';
  * 프로필(I)뿐 아니라 메인(B.1)의 추천 미션 [인증하기]에서도 그대로 쓸 수 있다.
  * ──────────────────────────────────────────────────────────────── */
 
-// 데모용 설정: true면 사진/위치 인증이 "첫 시도에서는 실패 → 다시 시도하면 성공"으로 동작해
-// Flow 3, 4(실패 시 롤백) 화면을 확인할 수 있습니다. 실제 API 연결 시 false로 두고 verify* 함수를 교체하세요.
-const DEMO_FAIL_FIRST_TRY = true;
+// 서버 주소에 쓰는 "내 미션 id"
+// 프로필은 userMissionId 칸에, 메인(api/home.ts)은 id 칸에 내 미션 id를 넣어 준다
+const userMissionIdOf = (m: Mission) => m.userMissionId ?? m.id;
 
-// TODO(F.2.1): 사진 → AI 판정 API 연결
-async function verifyPhoto(attempt: number): Promise<boolean> {
-  await sleep(1800);
-  return !(DEMO_FAIL_FIRST_TRY && attempt === 1);
-}
-
-// TODO(F.1.1): navigator.geolocation으로 현재 위치를 한 번만 확인하고 미션 장소 반경 300m 이내인지 계산
-async function verifyLocation(attempt: number): Promise<{ ok: boolean; distance: number }> {
-  await sleep(1500);
-  const ok = !(DEMO_FAIL_FIRST_TRY && attempt === 1);
-  return { ok, distance: ok ? 120 : 340 };
-}
+// 실패 문구 꺼내기 (서버가 보낸 한국어 안내를 그대로 보여준다)
+const failMessage = (err: unknown, fallback: string) => (err instanceof Error ? err.message : fallback);
 
 /* ───────────────────────── 카메라 (F.2) ───────────────────────── */
 
@@ -76,7 +67,7 @@ function CameraView({ onCapture, onClose }: { onCapture: (dataUrl: string) => vo
   const shoot = () => {
     const v = videoRef.current;
     if (ready && v && v.videoWidth > 0) {
-      const scale = Math.min(1, 800 / v.videoWidth);
+      const scale = Math.min(1, 1280 / v.videoWidth); // 긴 변 1280px JPEG (서버 추천 크기)
       const canvas = document.createElement('canvas');
       canvas.width = Math.round(v.videoWidth * scale);
       canvas.height = Math.round(v.videoHeight * scale);
@@ -127,14 +118,13 @@ type Step =
   | { kind: 'photoGuide' }
   | { kind: 'camera' }
   | { kind: 'photoChecking' }
-  | { kind: 'photoFail' }
+  | { kind: 'photoFail'; message: string }
   | { kind: 'locationGuide' }
   | { kind: 'locationChecking' }
-  | { kind: 'locationFail'; distance: number }
-  | { kind: 'done' };
-
-// 미션별 시도 횟수. 팝업을 닫았다 다시 열어도 유지돼서 데모의 "첫 시도 실패"가 한 번만 나온다
-const attempts: Record<number, number> = {};
+  | { kind: 'locationFail'; distance: number | null; message: string }
+  | { kind: 'noneChecking' }
+  | { kind: 'noneFail'; message: string }
+  | { kind: 'done'; result?: VerifyResult };
 
 interface Props {
   mission: Mission;
@@ -148,7 +138,7 @@ export default function MissionVerify({ mission: m, onVerified, onClose }: Props
       ? { kind: 'photoGuide' }
       : m.verifyType === 'location'
         ? { kind: 'locationGuide' }
-        : { kind: 'done' },
+        : { kind: 'noneChecking' },
   );
   const mounted = useRef(true);
   const finished = useRef(false);
@@ -160,36 +150,56 @@ export default function MissionVerify({ mission: m, onVerified, onClose }: Props
     };
   }, []);
 
-  const nextAttempt = () => (attempts[m.id] = (attempts[m.id] ?? 0) + 1);
-
   // 성공은 딱 한 번만 알린다 (경험치가 두 번 더해지지 않게)
-  const finish = (photoUrl?: string) => {
+  const finish = (result: VerifyResult, photoUrl?: string) => {
     if (finished.current) return;
     finished.current = true;
     onVerified(m, photoUrl);
-    setStep({ kind: 'done' });
+    setStep({ kind: 'done', result });
   };
 
-  // F.3 인증 없음 → 열자마자 완료
+  // F.3 인증 없음 → 열자마자 서버에 완료 요청
   useEffect(() => {
-    if (m.verifyType === 'none') finish();
+    if (m.verifyType !== 'none') return;
+    verifyNone(userMissionIdOf(m))
+      .then((result) => {
+        if (!mounted.current) return;
+        if (result.success) finish(result);
+        else setStep({ kind: 'noneFail', message: result.message });
+      })
+      .catch((err) => {
+        if (mounted.current) setStep({ kind: 'noneFail', message: failMessage(err, '미션을 완료하지 못했어요.') });
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // F.2 찍은 사진(dataURL) → 파일로 바꿔 서버에 보내고 AI 판정 결과를 받는다
   const handleCapture = async (photo: string) => {
     setStep({ kind: 'photoChecking' });
-    const ok = await verifyPhoto(nextAttempt());
-    if (!mounted.current) return;
-    if (ok) finish(photo);
-    else setStep({ kind: 'photoFail' });
+    try {
+      const blob = await (await fetch(photo)).blob();
+      const result = await verifyPhoto(userMissionIdOf(m), blob);
+      if (!mounted.current) return;
+      if (result.success) finish(result, photo);
+      else setStep({ kind: 'photoFail', message: result.message });
+    } catch (err) {
+      if (mounted.current) setStep({ kind: 'photoFail', message: failMessage(err, '사진을 확인하지 못했어요.') });
+    }
   };
 
+  // F.1 지금 위치를 서버에 보내 미션 장소 반경 안인지 확인
   const checkLocation = async () => {
     setStep({ kind: 'locationChecking' });
-    const result = await verifyLocation(nextAttempt());
-    if (!mounted.current) return;
-    if (result.ok) finish();
-    else setStep({ kind: 'locationFail', distance: result.distance });
+    try {
+      const result = await verifyLocation(userMissionIdOf(m));
+      if (!mounted.current) return;
+      if (result.success) finish(result);
+      else setStep({ kind: 'locationFail', distance: result.distance_m, message: result.message });
+    } catch (err) {
+      if (mounted.current) {
+        setStep({ kind: 'locationFail', distance: null, message: failMessage(err, '위치를 확인하지 못했어요.') });
+      }
+    }
   };
 
   switch (step.kind) {
@@ -227,7 +237,7 @@ export default function MissionVerify({ mission: m, onVerified, onClose }: Props
       return (
         <Alert
           title="사진 인증에 실패하였습니다"
-          sub="미션 대상이 잘 나오도록 다시 촬영해 주세요!"
+          sub={step.message}
           button="다시 시도하기"
           onClick={() => setStep({ kind: 'photoGuide' })}
         />
@@ -258,11 +268,17 @@ export default function MissionVerify({ mission: m, onVerified, onClose }: Props
       return (
         <Alert
           title="위치 인증에 실패하였습니다"
-          sub={`장소까지의 현재 거리 ${step.distance}m`}
+          sub={step.distance !== null ? `장소까지의 현재 거리 ${step.distance}m` : step.message}
           button="다시 시도하기"
           onClick={() => setStep({ kind: 'locationGuide' })}
         />
       );
+
+    case 'noneChecking':
+      return <Alert title="미션을 완료하고 있어요…" />;
+
+    case 'noneFail':
+      return <Alert title="미션을 완료하지 못했어요" sub={step.message} button="닫기" onClick={onClose} />;
 
     case 'done': {
       const title =
@@ -271,7 +287,9 @@ export default function MissionVerify({ mission: m, onVerified, onClose }: Props
           : m.verifyType === 'location'
             ? '위치가 인증되었습니다!'
             : '미션을 완료했습니다!';
-      return <Alert title={title} sub={`+${m.xp} XP`} button="확인" onClick={onClose} />;
+      // 서버 문구: 예) 미션 완료! 20 경험치를 얻었어요 🎉 Lv.2 싹을 틔운 볍씨가 되었어요
+      const sub = step.result?.message ?? `+${m.xp} XP`;
+      return <Alert title={title} sub={sub} button="확인" onClick={onClose} />;
     }
   }
 }

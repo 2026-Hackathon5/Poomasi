@@ -56,10 +56,14 @@ export default function MissionDrawScreen() {
     else setNotice('다른 미션이 없어요. 지금 미션에 도전해 보세요');
   };
 
-  const acceptMission = () => {
+  const acceptMission = async () => {
     if (!mission) return;
-    accept(mission);
-    navigate('/missions', { state: { toast: '미션 수락 완료!', country } });
+    try {
+      await accept(mission);
+      navigate('/missions', { state: { toast: '미션 수락 완료!', country } });
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : '미션을 수락하지 못했어요.');
+    }
   };
 
   return (

@@ -8,7 +8,7 @@ import { styles } from '../styles/poomasi';
 import { rs } from '../styles/random';
 import { cs } from '../styles/create';
 import { LogoHeader } from './ui';
-import { ChevronDown } from './missionParts';
+import { ChevronDown } from './icons';
 
 /* ────────────────────────────────────────────────────────────────
  * 랜덤 미션 (E.3) — 미션 만들기 화면 (/missions/new)
@@ -87,9 +87,15 @@ export default function MissionCreateScreen() {
     e.target.style.height = `${e.target.scrollHeight}px`;
   };
 
-  const submit = () => {
-    if (!canSubmit) return; // 여기서 verifyType은 '' 가 아님 (TypeScript가 알아서 좁혀 줌)
-    createMission({
+  const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  const submit = async () => {
+    if (!canSubmit || saving) return; // 여기서 verifyType은 '' 가 아님 (TypeScript가 알아서 좁혀 줌)
+    setSaving(true);
+    setSubmitError('');
+    try {
+      await createMission({
       title: title.trim(),
       description: description.trim(),
       country,
@@ -98,8 +104,14 @@ export default function MissionCreateScreen() {
       // 위치 미션이 아니면 장소 정보는 저장하지 않는다 (백엔드와 같음)
       placeName: isLocation ? placeName.trim() : undefined,
       address: isLocation ? address.trim() : undefined,
-    });
-    navigate(MINE_PATH, { state: { toast: '미션 게시 완료!' } });
+      });
+      navigate(MINE_PATH, { state: { toast: '미션 게시 완료!' } });
+    } catch (err) {
+      // 예) 주소를 찾지 못했어요. 도로명 주소로 다시 입력해 주세요
+      setSubmitError(err instanceof Error ? err.message : '미션을 게시하지 못했어요.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -181,13 +193,19 @@ export default function MissionCreateScreen() {
         )}
       </main>
 
+      {submitError && (
+        <p style={{ color: '#E53935', fontSize: 12, fontWeight: 700, textAlign: 'center', margin: '0 24px 8px' }}>
+          {submitError}
+        </p>
+      )}
+
       <button
         type="button"
-        disabled={!canSubmit}
-        style={{ ...cs.submit, ...(canSubmit ? null : cs.submitOff) }}
-        onClick={submit}
+        disabled={!canSubmit || saving}
+        style={{ ...cs.submit, ...(canSubmit && !saving ? null : cs.submitOff) }}
+        onClick={() => void submit()}
       >
-        미션 게시하기
+        {saving ? '게시하는 중...' : '미션 게시하기'}
       </button>
       <div style={styles.homeBar} />
 

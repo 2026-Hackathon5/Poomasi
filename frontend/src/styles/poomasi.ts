@@ -17,8 +17,9 @@ export const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
     overflow: 'hidden',
   },
-  header: { display: 'flex', justifyContent: 'center', padding: '38px 0 14px', flexShrink: 0 },
-  logo: { height: '30px', width: 'auto', display: 'block' },
+  // 상단 바: Figma App bar 컴포넌트 (위 47px, 높이 44px, 로고 높이 44px) — 모든 화면 공통
+  header: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '47px 0 0', height: '91px', flexShrink: 0 },
+  logo: { height: '44px', width: 'auto', display: 'block' },
   logoBtn: { border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' },
   backBtn: { position: 'absolute', left: '7px', bottom: 0, width: '44px', height: '44px', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' },
   content: {
@@ -26,7 +27,7 @@ export const styles: Record<string, CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
-    padding: '0 14px 118px',
+    padding: '12px 14px 118px', // 위 12px: 상단 바와 카드 사이 (메인 · 랜덤 미션은 각자 덮어씀)
     overflowY: 'auto',
   },
   card: { background: MINT, borderRadius: '4px', flexShrink: 0 },
@@ -57,6 +58,7 @@ export const styles: Record<string, CSSProperties> = {
     color: '#000',
     outline: 'none',
   },
+  inputLocked: { background: '#F2F2F2', color: '#5E5E5E' }, // 바꿀 수 없는 칸 (한국인의 국적)
   errorText: { fontSize: '11px', color: '#E53935', fontWeight: 700, margin: '3px 0 0 10px' },
   levelView: { position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden' },
   levelFill: { position: 'absolute', left: 0, top: 0, bottom: 0, background: '#C7D7C7' },
@@ -169,16 +171,16 @@ export const styles: Record<string, CSSProperties> = {
   statNum: { fontSize: '24px', color: GREEN, lineHeight: 1.1 },
   statLabel: { fontSize: '10px', fontWeight: 700, color: '#000' },
 
-  // 하단 탭
+  // 하단 탭: Figma Tab bar 컴포넌트 (x 20, 아래 34, 350×64, 모서리 30, 버튼 높이 44 · 14px Bold)
   tabBar: {
     position: 'absolute',
-    left: '17px',
-    right: '17px',
-    bottom: '30px',
-    height: '66px',
-    borderRadius: '33px',
+    left: '20px',
+    right: '20px',
+    bottom: '34px',
+    height: '64px',
+    borderRadius: '30px',
     background: '#fff',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -187,11 +189,11 @@ export const styles: Record<string, CSSProperties> = {
   },
   tab: {
     flex: 1,
-    height: '48px',
+    height: '44px',
     border: 'none',
     background: 'transparent',
-    borderRadius: '24px',
-    fontSize: '12px',
+    borderRadius: '30px',
+    fontSize: '14px',
     fontWeight: 700,
     color: GREEN,
     cursor: 'pointer',

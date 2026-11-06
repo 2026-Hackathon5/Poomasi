@@ -3,10 +3,11 @@ import { useLocation } from 'react-router-dom';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import type { UserInfo } from '../types/user';
 import type { CompletedMission, Mission } from '../types/mission';
-import { VERIFY_LABEL, fmtLong, fmtShort, todayISO } from '../utils/mission';
+import { VERIFY_LABEL, fmtLong, fmtShort } from '../utils/mission';
 import { styles } from '../styles/poomasi';
 import { Alert, Btn, LogoHeader, Panel, TabBar, Tags } from './ui';
 import MissionVerify from './MissionVerify';
+import { cancelMyMission, deleteMyRecord, writeReview } from '../api/myMissions';
 import { getLevel } from '../utils/level';
 import { useMissionStore } from '../mocks/missionStoreContext';
 import samplePhoto from '../assets/profile-sample-photo.jpg';
@@ -41,6 +42,7 @@ type Section = 'none' | 'profile' | 'mission';
 /* ───────────────────────── 상수 / 목업 데이터 ───────────────────────── */
 
 const COUNTRY_LIST = ['대한민국', '일본', '중국', '미국', '기타'];
+const KOREA = '대한민국'; // 한국인은 국적이 대한민국으로 고정 (회원가입 · 백엔드와 같은 규칙)
 const NICKNAME_RE = /^[A-Za-z0-9가-힣]{1,20}$/;
 const MAX_VISIBLE = 4; // 각 목록 최대 4개 노출, 5개 이상은 더보기
 const MIN_REVIEW_LENGTH = 2;
@@ -130,7 +132,7 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
 
   // 미션
   // 목업 미션 상태는 화면끼리 같이 씀 (랜덤 미션에서 수락하면 여기에도 보임)
-  const { xp, setXp, progress, setProgress, completed, setCompleted } = useMissionStore();
+  const { xp, progress, completed, refresh } = useMissionStore();
 
   // 팝업 / 인증 / 토스트
   const [modal, setModal] = useState<Modal>({ kind: 'none' });
@@ -182,11 +184,9 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
   const findProgress = (id: number) => progress.find((m) => m.id === id);
   const findCompleted = (id: number) => completed.find((m) => m.id === id);
 
-  // MissionVerify에서 인증에 성공하면 불림 → 진행 중에서 빼고 완료 맨 앞에 넣고 경험치 더하기
-  const finishMission = (m: Mission, photoUrl?: string) => {
-    setProgress((list) => list.filter((x) => x.id !== m.id));
-    setCompleted((list) => [{ ...m, completedAt: todayISO(), photoUrl }, ...list]);
-    setXp((v) => v + m.xp);
+  // MissionVerify에서 인증에 성공하면 불림 → 서버에서 진행 중 · 완료 · 경험치를 다시 불러온다
+  const finishMission = () => {
+    void refresh();
   };
 
   const startVerify = (m: Mission) => {
@@ -194,16 +194,34 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
     setVerifying(m);
   };
 
-  const cancelMission = (id: number) => {
-    setProgress((list) => list.filter((m) => m.id !== id));
-    setModal({ kind: 'cancelDone' });
+  // 서버에 쓰는 "내 미션 id" (화면의 id는 미션 id)
+  const userMissionIdOf = (m: Mission | undefined) => m?.userMissionId ?? m?.id ?? 0;
+
+  // 실패하면 서버가 보낸 한국어 안내를 그대로 보여준다
+  const showFail = (err: unknown, fallback: string) => {
+    window.alert(err instanceof Error ? err.message : fallback);
+  };
+
+  const cancelMission = async (id: number) => {
+    try {
+      await cancelMyMission(userMissionIdOf(findProgress(id)));
+      await refresh(); // 진행 중 목록 · 전체 미션 목록을 서버에서 다시 불러온다
+      setModal({ kind: 'cancelDone' });
+    } catch (err) {
+      showFail(err, '미션을 취소하지 못했어요.');
+    }
   };
 
   /* ── 완료 기록 / 후기 ── */
 
-  const deleteRecord = (id: number) => {
-    setCompleted((list) => list.filter((m) => m.id !== id));
-    setModal({ kind: 'deleteDone' });
+  const deleteRecord = async (id: number) => {
+    try {
+      await deleteMyRecord(userMissionIdOf(findCompleted(id)));
+      await refresh();
+      setModal({ kind: 'deleteDone' });
+    } catch (err) {
+      showFail(err, '기록을 삭제하지 못했어요.');
+    }
   };
 
   const openReviewWrite = (id: number) => {
@@ -211,12 +229,22 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
     setModal({ kind: 'reviewWrite', id });
   };
 
-  const saveReview = (id: number) => {
+  const [savingReview, setSavingReview] = useState(false);
+
+  const saveReview = async (id: number) => {
     const text = reviewText.trim();
-    if (text.length < MIN_REVIEW_LENGTH) return;
-    setCompleted((list) => list.map((m) => (m.id === id ? { ...m, review: { text, writtenAt: todayISO() } } : m)));
-    closeModal();
-    setToast(true);
+    if (text.length < MIN_REVIEW_LENGTH || savingReview) return;
+    setSavingReview(true);
+    try {
+      await writeReview(userMissionIdOf(findCompleted(id)), text);
+      await refresh(); // 후기 · 작성 날짜를 서버 값으로 다시 불러온다
+      closeModal();
+      setToast(true);
+    } catch (err) {
+      showFail(err, '후기를 저장하지 못했어요.');
+    } finally {
+      setSavingReview(false);
+    }
   };
 
   /* ───────── 렌더: 섹션 ───────── */
@@ -266,7 +294,14 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
               key={value}
               type="button"
               disabled={!editing}
-              onClick={() => setDraft({ ...draft, userType: value })}
+              onClick={() =>
+                // 한국인이면 국적을 대한민국으로 고정, 외국인으로 바꾸면 다시 직접 고르게 비움
+                setDraft({
+                  ...draft,
+                  userType: value,
+                  country: value === 'korean' ? KOREA : draft.userType === 'korean' ? '' : draft.country,
+                })
+              }
               style={{
                 ...styles.typeBtn,
                 ...(current === value ? styles.typeBtnActive : null),
@@ -280,7 +315,10 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
       </div>
 
       <label style={styles.label}>국적</label>
-      {editing ? (
+      {editing && draft.userType === 'korean' ? (
+        // 한국인은 국적을 바꿀 수 없음
+        <input type="text" value={KOREA} readOnly style={{ ...styles.input, ...styles.inputLocked }} />
+      ) : editing ? (
         <button
           type="button"
           style={{ ...styles.input, ...styles.selectBtn }}
@@ -426,7 +464,7 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
             <div style={styles.spacer} />
             <Btn onClick={() => startVerify(m)}>{m.verifyType === 'none' ? '완료하기' : '인증하기'}</Btn>
             <div style={styles.btnRow}>
-              <Btn variant="taupe" onClick={() => cancelMission(m.id)}>
+              <Btn variant="taupe" onClick={() => void cancelMission(m.id)}>
                 미션 취소
               </Btn>
               <Btn variant="taupe" onClick={closeModal}>
@@ -494,7 +532,7 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
               {m.review ? '작성한 후기 열람' : '후기 작성'}
             </Btn>
             <div style={styles.btnRow}>
-              <Btn variant="taupe" onClick={() => deleteRecord(m.id)}>
+              <Btn variant="taupe" onClick={() => void deleteRecord(m.id)}>
                 기록 삭제
               </Btn>
               <Btn variant="taupe" onClick={closeModal}>
@@ -546,8 +584,8 @@ export default function ProfileScreen({ userInfo, setUserInfo }: Props) {
               onChange={(e) => setReviewText(e.target.value)}
               style={styles.textarea}
             />
-            <Btn onClick={() => saveReview(m.id)} disabled={!valid} style={styles.centerBtn}>
-              저장
+            <Btn onClick={() => void saveReview(m.id)} disabled={!valid || savingReview} style={styles.centerBtn}>
+              {savingReview ? '저장 중...' : '저장'}
             </Btn>
           </Panel>
         );

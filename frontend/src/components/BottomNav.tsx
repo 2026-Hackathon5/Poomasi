@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 
-// 하단 탭 메뉴 (지도는 아직 화면이 없어서 비활성화)
+// 하단 탭 메뉴
 export default function BottomNav() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -21,7 +21,7 @@ export default function BottomNav() {
           숨은 뜻
         </button>
 
-        <button type="button" disabled>
+        <button type="button" {...tab('/map')}>
           지도
         </button>
 
