@@ -1,5 +1,5 @@
+import { useNavigate } from 'react-router-dom';
 //import React from 'react';
-import type { ScreenType } from '../App';
 import { useState } from 'react';
 import ImageButton from './ImageButton';
 import logo from '../assets/logo.png';
@@ -7,11 +7,9 @@ import langKO from '../assets/Lang=KO.png';
 import langEN from '../assets/Lang=EN.png';
 
 
-interface Props {
-  onNavigate: (screen: ScreenType) => void;
-}
 
-export default function StartScreen({ onNavigate }: Props) {
+export default function StartScreen() {
+  const navigate = useNavigate();
 
   //true면 KO, false면 EN
   const [isKo, setIsKo] = useState(true);
@@ -40,8 +38,8 @@ export default function StartScreen({ onNavigate }: Props) {
       </div>
 
       <div style={styles.bottomButtons}>
-        <ImageButton text="회원가입하기" onClick={() => onNavigate('SIGNUP')}/>
-        <ImageButton text="로그인하기" onClick={() => onNavigate('LOGIN')}/>
+        <ImageButton text="회원가입하기" onClick={() => navigate('/signup')}/>
+        <ImageButton text="로그인하기" onClick={() => navigate('/login')}/>
       </div>
     </div>
   );
