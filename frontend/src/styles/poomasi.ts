@@ -58,6 +58,7 @@ export const styles: Record<string, CSSProperties> = {
     color: '#000',
     outline: 'none',
   },
+  inputLocked: { background: '#F2F2F2', color: '#5E5E5E' }, // 바꿀 수 없는 칸 (한국인의 국적)
   errorText: { fontSize: '11px', color: '#E53935', fontWeight: 700, margin: '3px 0 0 10px' },
   levelView: { position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden' },
   levelFill: { position: 'absolute', left: 0, top: 0, bottom: 0, background: '#C7D7C7' },
