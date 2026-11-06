@@ -50,6 +50,9 @@ export interface MapMission {
   experience: number;
   completed: boolean;
   accepted: boolean;
+  // 서버 연결용: 수락했거나 완료한 미션이면 내 미션 id (인증·후기·삭제 API 주소에 사용)
+  userMissionId?: number;
+  review?: string | null;
 }
 
 // 지도 미션 후기 타입
