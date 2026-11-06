@@ -8,7 +8,7 @@ import { styles } from '../styles/poomasi';
 import { rs } from '../styles/random';
 import { cs } from '../styles/create';
 import { LogoHeader } from './ui';
-import { ChevronDown } from './missionParts';
+import { ChevronDown } from './icons';
 
 /* ────────────────────────────────────────────────────────────────
  * 랜덤 미션 (E.3) — 미션 만들기 화면 (/missions/new)

@@ -10,6 +10,7 @@ import { styles } from '../styles/poomasi';
 import { ms } from '../styles/main';
 import { Btn, LogoHeader, TabBar } from './ui';
 import MissionVerify from './MissionVerify';
+import { ChevronRight, ClockIcon, SeedIcon } from './icons';
 
 /* ────────────────────────────────────────────────────────────────
  * 메인 화면 (B.1)
@@ -32,34 +33,6 @@ function acceptedLabel(iso: string) {
   const [ty, tm, td] = todayISO().split('-').map(Number);
   const days = Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(y, m - 1, d)) / 86400000);
   return days <= 0 ? '오늘 수락' : `${days}일전 수락`;
-}
-
-// 아이콘: Figma 아이콘(energy-icons:seed-20 / akar-icons:clock / chevron-right-small)과 같은 크기로 그림
-function SeedIcon() {
-  return (
-    <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
-      <circle cx="20" cy="20" r="20" fill="#DFF4DF" />
-      <ellipse cx="20" cy="20" rx="7.5" ry="11" fill="none" stroke="#000" strokeWidth="1.8" />
-      <path d="M20 11 C16.5 16 16.5 24 20 29" fill="none" stroke="#000" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-      <circle cx="7" cy="7" r="5.8" fill="none" stroke="#000" strokeWidth="1.2" />
-      <path d="M7 4 V7 L9 8.3" fill="none" stroke="#000" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function ChevronIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-      <path d="M5.5 3.8 L8.7 7 L5.5 10.2" fill="none" stroke="#6C6C6C" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
 }
 
 function Tag({ children }: { children: ReactNode }) {
@@ -152,7 +125,7 @@ export default function MainScreen({ userInfo }: Props) {
                 }}
               >
                 전체보기
-                <ChevronIcon />
+                <ChevronRight size={14} />
               </button>
             </div>
             <div style={ms.tagRow}>
