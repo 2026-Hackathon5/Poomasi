@@ -87,6 +87,12 @@ export interface MissionData {
   completed: CompletedMission[];
 }
 
+// 시각이 늦은(최신) 것부터. 시각이 같으면 내 미션 id가 큰(나중에 만든) 것부터
+const byNewest =
+  (field: 'accepted_at' | 'completed_at') =>
+  (a: UserMissionOut, b: UserMissionOut) =>
+    (b[field] ?? '').localeCompare(a[field] ?? '') || b.id - a.id;
+
 export async function loadMissionData(): Promise<MissionData> {
   const [me, missions, progress, completed] = await Promise.all([
     api<Me>('/api/me'),
@@ -98,8 +104,9 @@ export async function loadMissionData(): Promise<MissionData> {
   return {
     me,
     catalog: missions.map((m) => ({ ...toCatalogMission(m), creatorId: m.creator_id, myStatus: m.my_status })),
-    progress: progress.map(toProgress),
-    completed: completed.map(toCompleted),
+    // 프로필: 진행 중 · 완료 모두 최신이 맨 위 (서버의 진행 중 목록은 오래된 순이라 여기서 다시 정렬)
+    progress: [...progress].sort(byNewest('accepted_at')).map(toProgress),
+    completed: [...completed].sort(byNewest('completed_at')).map(toCompleted),
   };
 }
 
