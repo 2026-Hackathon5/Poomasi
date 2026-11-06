@@ -169,16 +169,16 @@ export const styles: Record<string, CSSProperties> = {
   statNum: { fontSize: '24px', color: GREEN, lineHeight: 1.1 },
   statLabel: { fontSize: '10px', fontWeight: 700, color: '#000' },
 
-  // 하단 탭
+  // 하단 탭: Figma Tab bar 컴포넌트 (x 20, 아래 34, 350×64, 모서리 30, 버튼 높이 44 · 14px Bold)
   tabBar: {
     position: 'absolute',
-    left: '17px',
-    right: '17px',
-    bottom: '30px',
-    height: '66px',
-    borderRadius: '33px',
+    left: '20px',
+    right: '20px',
+    bottom: '34px',
+    height: '64px',
+    borderRadius: '30px',
     background: '#fff',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -187,11 +187,11 @@ export const styles: Record<string, CSSProperties> = {
   },
   tab: {
     flex: 1,
-    height: '48px',
+    height: '44px',
     border: 'none',
     background: 'transparent',
-    borderRadius: '24px',
-    fontSize: '12px',
+    borderRadius: '30px',
+    fontSize: '14px',
     fontWeight: 700,
     color: GREEN,
     cursor: 'pointer',
