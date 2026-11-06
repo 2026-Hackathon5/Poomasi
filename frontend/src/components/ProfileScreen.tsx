@@ -83,19 +83,19 @@ function MissionRow({
   const reviewed = !!done?.review;
   return (
     <div style={styles.row}>
-      <span style={styles.checkbox} aria-hidden="true">
-        {reviewed && <span style={styles.redCheck}>✓</span>}
-      </span>
+      {/* 후기를 쓴 미션만 체크박스를 빨간색으로 채우고 흰 체크 표시 (제목에 줄은 긋지 않는다) */}
       <span
         style={{
-          ...styles.rowTitle,
-          ...(completed
-            ? { textDecoration: 'line-through', textDecorationColor: '#E53935', textDecorationThickness: '1.5px' }
+          ...styles.checkbox,
+          ...(reviewed
+            ? { background: '#E53935', borderColor: '#E53935', display: 'flex', alignItems: 'center', justifyContent: 'center' }
             : null),
         }}
+        aria-label={reviewed ? '후기 작성 완료' : undefined}
       >
-        {m.title}
+        {reviewed && <span style={{ color: '#fff', fontSize: '10px', fontWeight: 900, lineHeight: 1 }}>✓</span>}
       </span>
+      <span style={styles.rowTitle}>{m.title}</span>
       {done && <span style={styles.rowDate}>{fmtShort(done.completedAt)}</span>}
       <button type="button" style={styles.detailBtn} onClick={onDetail}>
         상세정보
