@@ -1,5 +1,12 @@
+
 import { useState } from 'react';
-import { Link, Navigate, Route, Routes } from 'react-router-dom';
+import {
+  Link,
+  Navigate,
+  Route,
+  Routes,
+} from 'react-router-dom';
+
 import StartScreen from './components/StartScreen';
 import LoginScreen from './components/LoginScreen';
 import SignUpScreen from './components/SignUpScreen';
@@ -15,24 +22,61 @@ import PostDetailScreen from './components/PostDetailScreen';
 import PostEditScreen from './components/PostEditScreen';
 import type { UserInfo } from './types/user';
 
-const emptyUser: UserInfo = { email: '', nickname: '', userType: 'foreign', country: '' };
+const emptyUser: UserInfo = {
+  email: '',
+  nickname: '',
+  userType: 'foreign',
+  country: '',
+};
 
 export default function App() {
-  // Demo-only state. This is not authentication and resets on refresh.
-  const [userInfo, setUserInfo] = useState<UserInfo>({ ...emptyUser });
+  // 데모용 사용자 정보
+  // 실제 로그인 및 회원가입 API는 아직 연결되지 않음
+  const [userInfo, setUserInfo] = useState<UserInfo>({
+    ...emptyUser,
+  });
 
   return (
     <MissionStoreProvider>
     <div className="app-container">
       <Routes>
-        <Route path="/" element={<StartScreen />} />
-        <Route path="/login" element={<LoginScreen setUserInfo={setUserInfo} />} />
-        <Route path="/signup" element={<SignUpScreen setUserInfo={setUserInfo} />} />
+
+        {/* 메인 시작 화면 */}
+        <Route
+          path="/"
+          element={<StartScreen />}
+        />
+
+        {/* 로그인 */}
+        <Route
+          path="/login"
+          element={
+            <LoginScreen setUserInfo={setUserInfo} />
+          }
+        />
+
+        {/* 회원가입 */}
+        <Route
+          path="/signup"
+          element={
+            <SignUpScreen setUserInfo={setUserInfo} />
+          }
+        />
+
+        {/* 데모 완료 화면 */}
         <Route
           path="/complete"
           element={
-            <section style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <section
+              style={{
+                padding: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+              }}
+            >
               <h2>데모 진행 완료</h2>
+
               <p>
                 {userInfo.nickname
                   ? `${userInfo.nickname}님, 회원가입 입력이 완료되었습니다.`
