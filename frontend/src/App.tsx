@@ -1,7 +1,7 @@
 
 import './App.css';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Link,
   Navigate,
@@ -34,6 +34,10 @@ import PostEditScreen from './components/PostEditScreen';
 // 사용자 타입
 import type { UserInfo } from './types/user';
 
+// 로그인
+import { supabase } from './lib/supabase';
+import { getMe, toUserInfo } from './api/me';
+
 const emptyUser: UserInfo = {
   email: '',
   nickname: '',
@@ -42,11 +46,22 @@ const emptyUser: UserInfo = {
 };
 
 export default function App() {
-  // 데모용 사용자 정보
-  // 실제 로그인 및 회원가입 API는 아직 연결되지 않음
+  // 로그인한 사용자 정보 (로그인 화면에서 서버의 GET /api/me로 채움)
   const [userInfo, setUserInfo] = useState<UserInfo>({
     ...emptyUser,
   });
+
+  // 새로고침해도 로그인 유지: 브라우저에 저장된 로그인이 있으면 내 정보를 다시 불러온다
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) return;
+      try {
+        setUserInfo(toUserInfo(await getMe()));
+      } catch {
+        // 프로필이 없거나 서버 오류면 로그인 전 상태로 둔다
+      }
+    });
+  }, []);
 
   return (
     <MissionStoreProvider>
