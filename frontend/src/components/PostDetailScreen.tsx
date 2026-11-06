@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { Comment, Post } from '../types/post';
 import { postsApi } from '../api/posts';
-import icon from '../assets/icon.png';
+import { LogoHeader } from './ui';
 import BottomNav from './BottomNav';
 
 export default function PostDetailScreen() {
@@ -146,12 +146,8 @@ export default function PostDetailScreen() {
 
   return (
     <div className="poomasi-page detail-page">
-      <header className="pm-header">
-        <div className="pm-logo">
-          <img src={icon} alt="" />
-          <strong>POOMASI</strong>
-        </div>
-      </header>
+      {/* 상단 로고: 랜덤미션 · 프로필과 같은 공통 LogoHeader (누르면 메인으로) */}
+      <LogoHeader />
 
       <main className="detail-main">
         <h1>숨은 뜻 지식인</h1>

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { postsApi } from '../api/posts';
-import icon from '../assets/icon.png';
+import { LogoHeader } from './ui';
 import BottomNav from './BottomNav';
 
 export default function PostEditScreen() {
@@ -98,19 +98,8 @@ export default function PostEditScreen() {
 
   return (
     <div className="poomasi-page edit-page">
-      <header className="pm-header">
-        <button
-          className="pm-back"
-          onClick={() => navigate(detailPath)}
-        >
-          ‹
-        </button>
-
-        <div className="pm-logo">
-          <img src={icon} alt="" />
-          <strong>POOMASI</strong>
-        </div>
-      </header>
+      {/* 상단 로고: 공통 LogoHeader + 뒤로가기(상세로) */}
+      <LogoHeader onBack={() => navigate(detailPath)} />
 
       <main className="write-main">
         <h1>글 수정하기</h1>

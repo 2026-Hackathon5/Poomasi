@@ -1902,3 +1902,20 @@
 .app-container .feedback-main > p { font-size: 14px; }
 .app-container .pm-modal h2 { font-size: 20px; }
 .app-container .pm-modal p { font-size: 14px; }
+
+/* 숨은 뜻: 오른쪽 스크롤 막대 숨기기 (스크롤은 그대로 됨), 옆으로 밀리는 가로 스크롤 막기 */
+.app-container .poomasi-page,
+.app-container .poomasi-page * {
+  scrollbar-width: none;
+}
+
+.app-container .poomasi-page::-webkit-scrollbar,
+.app-container .poomasi-page *::-webkit-scrollbar {
+  display: none;
+}
+
+.app-container .list-main,
+.app-container .write-main,
+.app-container .detail-main {
+  overflow-x: hidden;
+}

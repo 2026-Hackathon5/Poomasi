@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Post } from '../types/post';
 import { postsApi } from '../api/posts';
-import icon from '../assets/icon.png';
+import { LogoHeader } from './ui';
 import BottomNav from './BottomNav';
 
 const dailyExpressions = [
@@ -76,12 +76,8 @@ export default function PostListScreen() {
 
   return (
     <div className="poomasi-page list-page">
-      <header className="pm-header">
-        <div className="pm-logo">
-          <img src={icon} alt="" />
-          <strong>POOMASI</strong>
-        </div>
-      </header>
+      {/* 상단 로고: 랜덤미션 · 프로필과 같은 공통 LogoHeader (누르면 메인으로) */}
+      <LogoHeader />
 
       <main className="list-main">
         <section className="daily-expression">

@@ -4,7 +4,7 @@ import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Post } from '../types/post';
 import { postsApi } from '../api/posts';
-import icon from '../assets/icon.png';
+import { LogoHeader } from './ui';
 import BottomNav from './BottomNav';
 
 const DRAFT_KEY = 'poomasi-post-draft-v1';
@@ -106,23 +106,8 @@ export default function PostScreen() {
           : ''
       }`}
     >
-      <header className="pm-header">
-        {(status === 'editing' ||
-          status === 'submitting') && (
-          <button
-            className="pm-back"
-            onClick={back}
-            disabled={busy}
-          >
-            ‹
-          </button>
-        )}
-
-        <div className="pm-logo">
-          <img src={icon} alt="" />
-          <strong>POOMASI</strong>
-        </div>
-      </header>
+      {/* 상단 로고: 공통 LogoHeader. 글 쓰는 중에만 뒤로가기(등록 중에는 숨김) */}
+      <LogoHeader onBack={status === 'editing' ? back : undefined} />
 
       {(status === 'editing' ||
         status === 'submitting') && (
