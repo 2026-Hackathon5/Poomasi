@@ -107,7 +107,6 @@ export function LogoHeader({
 const TABS: { label: string; path?: string }[] = [
   { label: '랜덤미션', path: '/missions' },
   { label: '숨은 뜻', path: '/posts' },
-  { label: '지도' },
   { label: '지도', path: '/map' },
   { label: '프로필', path: '/profile' },
 ];
