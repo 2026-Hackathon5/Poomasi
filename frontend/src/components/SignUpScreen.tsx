@@ -49,8 +49,8 @@ export default function SignUpScreen({ setUserInfo }: Props) {
       country,
     });
 
-    // 2. 데모 완료 화면으로 이동
-    navigate('/complete');
+    // 2. 메인 화면(B.1)으로 이동
+    navigate('/home');
   };
 
   return (
@@ -356,4 +356,4 @@ const styles = {
     cursor: 'pointer',
   },
   checkIcon: { color: '#14552A', fontWeight: 'bold' },
-};
+};
